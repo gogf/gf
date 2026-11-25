@@ -199,7 +199,7 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 		schema.Properties.Set(fieldName, *schemaRef)
 	}
 
-	schema.Properties.Iterator(func(key string, ref SchemaRef) bool {
+	for key, ref := range schema.Properties.Iterator {
 		if ref.Value != nil && ref.Value.ValidationRules != "" {
 			validationRuleSet := gset.NewStrSetFrom(gstr.Split(ref.Value.ValidationRules, "|"))
 			if validationRuleSet.Contains(validationRuleKeyForRequired) {
@@ -209,32 +209,32 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 			// Extract validation rules to schema. like min, max, length
 			lstRules := gstr.Split(ref.Value.ValidationRules, "|")
 			for _, rule := range lstRules {
-				if strings.HasPrefix(rule, validationRuleKeyForMax) {
+				if value, ok := strings.CutPrefix(rule, validationRuleKeyForMax); ok {
 					if ref.Value.Type == TypeInteger || ref.Value.Type == TypeNumber {
-						f := gconv.Float64(rule[4:])
+						f := gconv.Float64(value)
 						ref.Value.Max = &f
 					}
 				}
 
-				if strings.HasPrefix(rule, validationRuleKeyForMaxLength) {
-					maxlength := gconv.Uint64(rule[11:])
+				if value, ok := strings.CutPrefix(rule, validationRuleKeyForMaxLength); ok {
+					maxlength := gconv.Uint64(value)
 					ref.Value.MaxLength = &maxlength
 				}
 
-				if strings.HasPrefix(rule, validationRuleKeyForMin) {
+				if value, ok := strings.CutPrefix(rule, validationRuleKeyForMin); ok {
 					if ref.Value.Type == TypeInteger || ref.Value.Type == TypeNumber {
-						f := gconv.Float64(rule[4:])
+						f := gconv.Float64(value)
 						ref.Value.Min = &f
 					}
 				}
 
-				if strings.HasPrefix(rule, validationRuleKeyForMinLength) {
-					minlength := gconv.Uint64(rule[11:])
+				if value, ok := strings.CutPrefix(rule, validationRuleKeyForMinLength); ok {
+					minlength := gconv.Uint64(value)
 					ref.Value.MinLength = minlength
 				}
 
-				if strings.HasPrefix(rule, validationRuleKeyForLength) {
-					lengthRule := gstr.Split(rule[7:], ",")
+				if value, ok := strings.CutPrefix(rule, validationRuleKeyForLength); ok {
+					lengthRule := gstr.Split(value, ",")
 					if len(lengthRule) == 2 {
 						minlength := gconv.Uint64(lengthRule[0])
 						ref.Value.MinLength = minlength
@@ -243,9 +243,9 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 					}
 				}
 
-				if strings.HasPrefix(rule, validationRuleKeyForBetween) {
+				if value, ok := strings.CutPrefix(rule, validationRuleKeyForBetween); ok {
 					if ref.Value.Type == TypeInteger || ref.Value.Type == TypeNumber {
-						lengthRule := gstr.Split(rule[8:], ",")
+						lengthRule := gstr.Split(value, ",")
 						if len(lengthRule) == 2 {
 							minimum := gconv.Float64(lengthRule[0])
 							ref.Value.Min = &minimum
@@ -259,8 +259,7 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 		if !isValidParameterName(key) {
 			ignoreProperties = append(ignoreProperties, key)
 		}
-		return true
-	})
+	}
 
 	if len(ignoreProperties) > 0 {
 		schema.Properties.Removes(ignoreProperties)

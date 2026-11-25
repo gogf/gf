@@ -150,6 +150,91 @@ func Test_ViolenceCheck(t *testing.T) {
 	})
 }
 
+func Test_NegativeIndex(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j, err := gjson.DecodeToJson([]byte(`{"a":[1,2,3]}`))
+		t.AssertNil(err)
+		t.Assert(j.Get("a.0"), 1)
+		t.Assert(j.Get("a.-1"), nil)
+		t.Assert(j.Get("a.-4"), nil)
+
+		j.SetViolenceCheck(true)
+		t.Assert(j.Get("a.0"), 1)
+		t.Assert(j.Get("a.-1"), nil)
+		t.Assert(j.Get("a.-4"), nil)
+
+		before := j.MustToJsonString()
+		t.AssertNE(j.Set("a.-1", 9), nil)
+		t.AssertNE(j.Remove("a.-1"), nil)
+		t.Assert(j.MustToJsonString(), before)
+
+		// Failed calls leave the content unchanged, including nil roots.
+		nilJson := gjson.New(nil)
+		t.AssertNE(nilJson.Set("-1", 9), nil)
+		t.AssertNE(nilJson.Set("x.-1", 1), nil)
+		t.AssertNil(nilJson.Remove("-1"))
+		t.AssertNil(nilJson.Remove("x.-1"))
+		t.Assert(nilJson.IsNil(), true)
+
+		// Negative indexes in non-leaf segments used as the next node size.
+		j = gjson.New(`{}`)
+		before = j.MustToJsonString()
+		t.AssertNE(j.Set("x.-1", 1), nil)
+		t.AssertNE(j.Set("x.-2", 1), nil)
+		t.Assert(j.MustToJsonString(), before)
+
+		j = gjson.New(`{"a":[1]}`)
+		before = j.MustToJsonString()
+		t.AssertNE(j.Set("a.0.-2", 1), nil)
+		t.Assert(j.MustToJsonString(), before)
+
+		j = gjson.New(`{"a":[]}`)
+		before = j.MustToJsonString()
+		t.AssertNE(j.Set("a.5.-2", 1), nil)
+		t.Assert(j.MustToJsonString(), before)
+
+		// The negative index at the tail is rejected before intermediate nodes are created.
+		j = gjson.New(`{"a":1}`)
+		before = j.MustToJsonString()
+		t.AssertNE(j.Set("a.0.-1", 9), nil)
+		t.Assert(j.MustToJsonString(), before)
+
+		j = gjson.New(`{"a":[1]}`)
+		before = j.MustToJsonString()
+		t.AssertNE(j.Set("a.0.b.-1", 9), nil)
+		t.Assert(j.MustToJsonString(), before)
+
+		j = gjson.New(`{"a":1}`)
+		before = j.MustToJsonString()
+		t.AssertNE(j.Set("a.0.b.c.-1", 9), nil)
+		t.Assert(j.MustToJsonString(), before)
+
+		// Failures below an already created node also leave the data unchanged.
+		j = gjson.New(`{}`)
+		before = j.MustToJsonString()
+		t.AssertNE(j.Set("x.0.-1", 1), nil)
+		t.Assert(j.MustToJsonString(), before)
+
+		j = gjson.New(`{"a":[]}`)
+		before = j.MustToJsonString()
+		t.AssertNE(j.Set("a.5.b.-1", 1), nil)
+		t.Assert(j.MustToJsonString(), before)
+
+		j = gjson.New(`{"a":[[1]]}`)
+		before = j.MustToJsonString()
+		t.AssertNE(j.Remove("a.0.-1"), nil)
+		t.Assert(j.MustToJsonString(), before)
+
+		// Negative numeric keys of a map are still valid.
+		m := gjson.New(`{"m":{"-1":7}}`)
+		t.Assert(m.Get("m.-1"), 7)
+		t.AssertNil(m.Set("m.-2", 8))
+		t.Assert(m.Get("m.-2"), 8)
+		t.AssertNil(m.Remove("m.-2"))
+		t.Assert(m.Get("m.-2"), nil)
+	})
+}
+
 func Test_GetVar(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
@@ -452,6 +537,15 @@ func Test_Basic(t *testing.T) {
 		t.Assert(j.Get("0"), 1)
 		t.Assert(len(j.Var().Array()), 2)
 
+		// Removing a path through an out-of-range index or a nil root creates nothing.
+		j = gjson.New(`{"a":[1]}`)
+		t.AssertNil(j.Remove("a.5.y"))
+		t.Assert(j.MustToJsonString(), `{"a":[1]}`)
+
+		j = gjson.New(nil)
+		t.AssertNil(j.Remove("x.y"))
+		t.Assert(j.IsNil(), true)
+
 		j = gjson.New(`[1,2,3]`)
 		// If index 0 is delete, its next item will be at index 0.
 		t.Assert(j.Remove("0"), nil)
@@ -475,6 +569,22 @@ func Test_Basic(t *testing.T) {
 		err = j.Remove("0.a")
 		t.AssertNil(err)
 		t.Assert(j.Get("0"), 1)
+
+		// Removing a non-numeric path from an array keeps the array unchanged.
+		j = gjson.New(`{"a":[1,2,3]}`)
+		t.AssertNil(j.Remove("a.x"))
+		t.Assert(j.MustToJsonString(), `{"a":[1,2,3]}`)
+		t.AssertNil(j.Remove("a.x.y"))
+		t.Assert(j.MustToJsonString(), `{"a":[1,2,3]}`)
+
+		j = gjson.New(`[1,2,3]`)
+		t.AssertNil(j.Remove("x"))
+		t.Assert(j.MustToJsonString(), `[1,2,3]`)
+
+		// Removing a missing child from a map creates nothing.
+		j = gjson.New(`{}`)
+		t.AssertNil(j.Remove("x.y"))
+		t.Assert(j.MustToJsonString(), `{}`)
 
 		name := struct {
 			Name string

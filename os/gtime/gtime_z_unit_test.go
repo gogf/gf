@@ -35,7 +35,7 @@ func Test_Microsecond(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		micros := gtime.TimestampMicro()
 		timeTemp := time.Unix(0, micros*1e3)
-		t.Assert(micros, timeTemp.UnixNano()/1e3)
+		t.Assert(micros, timeTemp.UnixMicro())
 	})
 }
 
@@ -43,7 +43,7 @@ func Test_Millisecond(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		millis := gtime.TimestampMilli()
 		timeTemp := time.Unix(0, millis*1e6)
-		t.Assert(millis, timeTemp.UnixNano()/1e6)
+		t.Assert(millis, timeTemp.UnixMilli())
 	})
 }
 
@@ -52,6 +52,18 @@ func Test_Second(t *testing.T) {
 		s := gtime.Timestamp()
 		timeTemp := time.Unix(s, 0)
 		t.Assert(s, timeTemp.Unix())
+	})
+}
+
+func Test_TimestampOfBefore1970(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// 1969-12-31 23:59:58.4999995 UTC: the Unix helpers floor the
+		// sub-second part, the previous UnixNano()/1eN divisions truncated
+		// towards zero.
+		timeTemp := gtime.NewFromTime(time.Unix(-1, -500000500))
+		t.Assert(timeTemp.Timestamp(), int64(-2))
+		t.Assert(timeTemp.TimestampMilli(), int64(-1501))
+		t.Assert(timeTemp.TimestampMicro(), int64(-1500001))
 	})
 }
 
@@ -231,6 +243,22 @@ func Test_StrToTime(t *testing.T) {
 	})
 }
 
+// Test_StrToTime_ZoneOffsetWithDST checks that a given zone offset is kept
+// when it differs from the offset the local zone has at the parsed time.
+func Test_StrToTime_ZoneOffsetWithDST(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Asia/Shanghai, the zone the tests run in, is +08:00 now
+		// but was +09:00 in the summer of 1988.
+		timeTemp, err := gtime.StrToTime("1988-07-01T12:00:00+08:00")
+		t.AssertNil(err)
+		t.Assert(timeTemp.Time.UTC().Format(time.RFC3339), "1988-07-01T04:00:00Z")
+
+		timeTemp, err = gtime.StrToTime("1988-07-01T12:00:00+09:00")
+		t.AssertNil(err)
+		t.Assert(timeTemp.Time.UTC().Format(time.RFC3339), "1988-07-01T03:00:00Z")
+	})
+}
+
 func Test_ConvertZone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// 现行时间
@@ -299,11 +327,53 @@ func Test_ParseDuration(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(d.String(), "3m0s")
 	})
+	// fractions and signs on days, as with the other units
+	gtest.C(t, func(t *gtest.T) {
+		for s, expect := range map[string]string{
+			"1.5d":   "36h0m0s",
+			"0.5d":   "12h0m0s",
+			".5d":    "12h0m0s",
+			"-1.5d":  "-36h0m0s",
+			"+1d":    "24h0m0s",
+			"+1d2h":  "26h0m0s",
+			"-0d1h":  "-1h0m0s",
+			"1.25D":  "30h0m0s",
+			"0.5d1h": "13h0m0s",
+		} {
+			d, err := gtime.ParseDuration(s)
+			t.AssertNil(err)
+			t.Assert(d.String(), expect)
+		}
+	})
 	// error
 	gtest.C(t, func(t *gtest.T) {
 		d, err := gtime.ParseDuration("-1dd2h3m")
 		t.AssertNE(err, nil)
 		t.Assert(d.String(), "0s")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		for _, s := range []string{"1..5d", "1.5.2d", "2d3", "--1d", "1000000000d"} {
+			d, err := gtime.ParseDuration(s)
+			t.AssertNE(err, nil)
+			t.Assert(d.String(), "0s")
+		}
+	})
+	// the largest day count that fits into time.Duration, and the first one that overflows
+	gtest.C(t, func(t *gtest.T) {
+		d, err := gtime.ParseDuration("106751d")
+		t.AssertNil(err)
+		t.Assert(d.String(), "2562024h0m0s")
+
+		d, err = gtime.ParseDuration("-106751d")
+		t.AssertNil(err)
+		t.Assert(d.String(), "-2562024h0m0s")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		for _, s := range []string{"106752d", "-106752d"} {
+			d, err := gtime.ParseDuration(s)
+			t.AssertNE(err, nil)
+			t.Assert(d.String(), "0s")
+		}
 	})
 }
 

@@ -180,7 +180,7 @@ func (s *Server) checkAndCreateFuncInfo(
 		return
 	}
 
-	if !reflectType.In(0).Implements(reflect.TypeOf((*context.Context)(nil)).Elem()) {
+	if !reflectType.In(0).Implements(reflect.TypeFor[context.Context]()) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`invalid handler: defined as "%s", but the first input parameter should be type of "context.Context"`,
@@ -189,7 +189,7 @@ func (s *Server) checkAndCreateFuncInfo(
 		return
 	}
 
-	if !reflectType.Out(1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
+	if !reflectType.Out(1).Implements(reflect.TypeFor[error]()) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`invalid handler: defined as "%s", but the last output parameter should be type of "error"`,

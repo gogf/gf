@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/grpool"
@@ -188,6 +189,51 @@ func TestCache_LRU_expire(t *testing.T) {
 
 		n, _ = cache.Size(ctx)
 		t.Assert(n, 0)
+	})
+}
+
+func TestCache_LRU_MissedKeysDoNotEvict(t *testing.T) {
+	var (
+		nilFunc = func(ctx context.Context) (any, error) { return nil, nil }
+		errFunc = func(ctx context.Context) (any, error) { return nil, gerror.New("not found") }
+	)
+	gtest.C(t, func(t *gtest.T) {
+		cache := gcache.New(2)
+		t.AssertNil(cache.Set(ctx, "a", 1, 0))
+		t.AssertNil(cache.Set(ctx, "b", 2, 0))
+		// Lookups that end up storing nothing must not take a slot in the LRU.
+		for i := 0; i < 3; i++ {
+			v, err := cache.GetOrSetFunc(ctx, i, nilFunc, 0)
+			t.AssertNil(err)
+			t.AssertNil(v)
+			v, err = cache.GetOrSetFuncLock(ctx, i+10, nilFunc, 0)
+			t.AssertNil(err)
+			t.AssertNil(v)
+			_, err = cache.GetOrSetFunc(ctx, i+20, errFunc, 0)
+			t.AssertNE(err, nil)
+			_, err = cache.GetOrSetFuncLock(ctx, i+30, errFunc, 0)
+			t.AssertNE(err, nil)
+			_, err = cache.SetIfNotExistFunc(ctx, i+40, errFunc, 0)
+			t.AssertNE(err, nil)
+			_, err = cache.SetIfNotExistFuncLock(ctx, i+50, nilFunc, 0)
+			t.AssertNil(err)
+			_, err = cache.SetIfNotExistFuncLock(ctx, i+60, errFunc, 0)
+			t.AssertNE(err, nil)
+		}
+		n, _ := cache.Size(ctx)
+		t.Assert(n, 2)
+		v, _ := cache.Get(ctx, "a")
+		t.Assert(v, 1)
+		v, _ = cache.Get(ctx, "b")
+		t.Assert(v, 2)
+		// The LRU still evicts the least recently used item.
+		t.AssertNil(cache.Set(ctx, "c", 3, 0))
+		v, _ = cache.Get(ctx, "a")
+		t.AssertNil(v)
+		v, _ = cache.Get(ctx, "b")
+		t.Assert(v, 2)
+		v, _ = cache.Get(ctx, "c")
+		t.Assert(v, 3)
 	})
 }
 

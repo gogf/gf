@@ -124,6 +124,12 @@ func Test_StrLimit(t *testing.T) {
 		t.Assert(gstr.StrLimit("我爱GoFrame", 8, ""), "我爱Go")
 		t.Assert(gstr.StrLimit("*", 4, ""), "*")
 	})
+	// No suffix for a string that is not longer than `length`.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.StrLimit("abc", 3), "abc")
+		t.Assert(gstr.StrLimit("abc", 3, "~"), "abc")
+		t.Assert(gstr.StrLimit("abcd", 3), "abc...")
+	})
 }
 
 func Test_StrLimitRune(t *testing.T) {
@@ -133,6 +139,12 @@ func Test_StrLimitRune(t *testing.T) {
 		t.Assert(gstr.StrLimitRune("我爱GoFrame", 2, "**"), "我爱**")
 		t.Assert(gstr.StrLimitRune("我爱GoFrame", 4, ""), "我爱Go")
 		t.Assert(gstr.StrLimitRune("*", 4, ""), "*")
+	})
+	// No suffix for a string that is not longer than `length`.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.StrLimitRune("我爱", 2), "我爱")
+		t.Assert(gstr.StrLimitRune("我爱", 2, "~"), "我爱")
+		t.Assert(gstr.StrLimitRune("我爱Go", 2), "我爱...")
 	})
 }
 
@@ -488,5 +500,21 @@ func Test_SubStrFromREx(t *testing.T) {
 		t.Assert(gstr.SubStrFromREx("我爱GoFrameGood", `GG`), "")
 		t.Assert(gstr.SubStrFromREx("我爱GoFrameGood", `我`), "爱GoFrameGood")
 		t.Assert(gstr.SubStrFromREx("我爱GoFrameGood", `Frame`), `Good`)
+	})
+}
+
+func Test_Soundex(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.Soundex("Robert"), "R163")
+		t.Assert(gstr.Soundex("Rupert"), "R163")
+		t.Assert(gstr.Soundex("Euler"), "E460")
+		t.Assert(gstr.Soundex("Ellery"), "E460")
+		t.Assert(gstr.Soundex("Gauss"), "G200")
+		t.Assert(gstr.Soundex("Hilbert"), "H416")
+		t.Assert(gstr.Soundex("Heilbronn"), "H416")
+		t.Assert(gstr.Soundex("Knuth"), "K530")
+		t.Assert(gstr.Soundex("Lloyd"), "L300")
+		t.Assert(gstr.Soundex("Lukasiewicz"), "L222")
+		t.Assert(gstr.Soundex("Hello"), "H400")
 	})
 }

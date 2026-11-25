@@ -325,20 +325,18 @@ func (tree *BKVTree[K, V]) Replace(data map[K]V) {
 // Map returns all key-value pairs as map.
 func (tree *BKVTree[K, V]) Map() map[K]V {
 	m := make(map[K]V, tree.Size())
-	tree.IteratorAsc(func(key K, value V) bool {
+	for key, value := range tree.IteratorAsc {
 		m[key] = value
-		return true
-	})
+	}
 	return m
 }
 
 // MapStrAny returns all key-value items as map[string]any.
 func (tree *BKVTree[K, V]) MapStrAny() map[string]any {
 	m := make(map[string]any, tree.Size())
-	tree.IteratorAsc(func(key K, value V) bool {
+	for key, value := range tree.IteratorAsc {
 		m[gconv.String(key)] = value
-		return true
-	})
+	}
 	return m
 }
 
@@ -413,7 +411,11 @@ func (tree *BKVTree[K, V]) IteratorAscFrom(key K, match bool, f func(key K, valu
 		return
 	}
 	for ; index < len(keys); index++ {
-		f(keys[index], tree.Get(keys[index]))
+		// The read lock is already held, so read the value without locking again.
+		value, _ := tree.doGet(keys[index])
+		if !f(keys[index], value) {
+			break
+		}
 	}
 }
 
@@ -450,7 +452,11 @@ func (tree *BKVTree[K, V]) IteratorDescFrom(key K, match bool, f func(key K, val
 		return
 	}
 	for ; index >= 0; index-- {
-		f(keys[index], tree.Get(keys[index]))
+		// The read lock is already held, so read the value without locking again.
+		value, _ := tree.doGet(keys[index])
+		if !f(keys[index], value) {
+			break
+		}
 	}
 }
 

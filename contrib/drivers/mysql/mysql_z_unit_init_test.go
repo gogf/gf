@@ -180,14 +180,18 @@ func Test_PartitionTable(t *testing.T) {
 
 	// defer dropShopDBTable()
 	gtest.C(t, func(t *gtest.T) {
+		// p3 and p4 hold every row, as p1 and p2 end before the inserted years.
 		data, err := db3.Ctx(ctx).Model("dbx_order").Partition("p3", "p4").All()
 		t.AssertNil(err)
-		dataLen := len(data)
-		t.Assert(dataLen, 5)
+		t.Assert(len(data), 5)
+		// p3 alone holds only the 2021 row.
 		data, err = db3.Ctx(ctx).Model("dbx_order").Partition("p3").All()
 		t.AssertNil(err)
-		dataLen = len(data)
-		t.Assert(dataLen, 5)
+		t.Assert(len(data), 1)
+		t.Assert(data[0]["id"].Int(), 1)
+		// An unknown partition is rejected by the database, not silently ignored.
+		_, err = db3.Ctx(ctx).Model("dbx_order").Partition("nonexistent").All()
+		t.AssertNE(err, nil)
 	})
 }
 func createShopDBTable() {

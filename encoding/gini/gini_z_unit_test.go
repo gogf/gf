@@ -7,6 +7,7 @@
 package gini_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/gogf/gf/v2/encoding/gini"
@@ -56,6 +57,46 @@ func TestDecode(t *testing.T) {
 		if err == nil {
 			gtest.Fatal(err)
 		}
+	})
+}
+
+func TestDecode_LastLineWithoutNewline(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		res, err := gini.Decode([]byte("[addr]\nip=127.0.0.1"))
+		t.AssertNil(err)
+		t.Assert(res["addr"].(map[string]any)["ip"], "127.0.0.1")
+	})
+	// Lines are not limited to the Scanner default token size.
+	gtest.C(t, func(t *gtest.T) {
+		value := strings.Repeat("x", 128*1024)
+		res, err := gini.Decode([]byte("[addr]\nip=" + value))
+		t.AssertNil(err)
+		t.Assert(res["addr"].(map[string]any)["ip"], value)
+	})
+}
+
+// A "]" placed before the "[" of a section header used to slice the line with a
+// reversed range and panic. Such a line is now ignored instead.
+func TestDecode_SectionBracketOrder(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		res, err := gini.Decode([]byte("[sec]\nab]c[d"))
+		t.AssertNil(err)
+		// The reversed bracket line is ignored, no key is recorded for the section.
+		t.Assert(res["sec"], nil)
+	})
+
+	// The reversed bracket order is only ignored, the following lines still parse.
+	gtest.C(t, func(t *gtest.T) {
+		res, err := gini.Decode([]byte("[sec]\nab]c[d\nip=127.0.0.1"))
+		t.AssertNil(err)
+		t.Assert(res["sec"].(map[string]any)["ip"], "127.0.0.1")
+	})
+
+	// A well formed header still works.
+	gtest.C(t, func(t *gtest.T) {
+		res, err := gini.Decode([]byte("[sec]\nip=127.0.0.1"))
+		t.AssertNil(err)
+		t.Assert(res["sec"].(map[string]any)["ip"], "127.0.0.1")
 	})
 }
 

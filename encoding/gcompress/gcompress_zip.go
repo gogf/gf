@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -162,63 +163,77 @@ func unZipFileWithReader(reader *zip.Reader, dstFolderPath string, zippedPrefix 
 	prefix := ""
 	if len(zippedPrefix) > 0 {
 		prefix = gstr.Replace(zippedPrefix[0], `\`, `/`)
+		prefix = strings.Trim(prefix, "/")
 	}
 	if err := os.MkdirAll(dstFolderPath, 0755); err != nil {
 		return err
 	}
-	var (
-		name    string
-		dstPath string
-		dstDir  string
-	)
+	root, err := os.OpenRoot(dstFolderPath)
+	if err != nil {
+		return gerror.Wrapf(err, `os.OpenRoot failed for path "%s"`, dstFolderPath)
+	}
+	defer root.Close()
+
+	var name string
 	for _, file := range reader.File {
 		name = gstr.Replace(file.Name, `\`, `/`)
 		name = gstr.Trim(name, "/")
 		if prefix != "" {
-			if !strings.HasPrefix(name, prefix) {
+			// The prefix must match a whole path segment, otherwise prefix "a" would
+			// also match a sibling directory named "ab".
+			trimmedName, ok := strings.CutPrefix(name, prefix)
+			if !ok || (trimmedName != "" && trimmedName[0] != '/') {
 				continue
 			}
-			name = name[len(prefix):]
+			name = trimmedName
 		}
-		dstPath = filepath.Join(dstFolderPath, name)
-		if file.FileInfo().IsDir() {
-			_ = os.MkdirAll(dstPath, file.Mode())
+		name = strings.TrimLeft(name, "/")
+		if name == "" {
 			continue
 		}
-		dstDir = filepath.Dir(dstPath)
-		if len(dstDir) > 0 {
-			if _, err := os.Stat(dstDir); os.IsNotExist(err) {
-				if err = os.MkdirAll(dstDir, 0755); err != nil {
-					err = gerror.Wrapf(err, `os.MkdirAll failed for path "%s"`, dstDir)
-					return err
-				}
+		if !filepath.IsLocal(name) {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`zip file name "%s" escapes the destination directory`,
+				file.Name,
+			)
+		}
+		name = filepath.Clean(name)
+		if name == "." {
+			continue
+		}
+		if file.FileInfo().IsDir() {
+			if err = root.MkdirAll(name, file.Mode().Perm()); err != nil {
+				return gerror.Wrapf(err, `MkdirAll failed for name "%s"`, name)
+			}
+			continue
+		}
+		if dir := filepath.Dir(name); dir != "." {
+			if err = root.MkdirAll(dir, 0755); err != nil {
+				return gerror.Wrapf(err, `MkdirAll failed for name "%s"`, dir)
 			}
 		}
 		fileReader, err := file.Open()
 		if err != nil {
-			err = gerror.Wrapf(err, `file.Open failed`)
-			return err
+			return gerror.Wrapf(err, `file.Open failed for name "%s"`, file.Name)
 		}
-		// The fileReader is closed in function doCopyForUnZipFileWithReader.
-		if err = doCopyForUnZipFileWithReader(file, fileReader, dstPath); err != nil {
+		if err = doCopyForUnZipFileWithReader(file, fileReader, root, name); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func doCopyForUnZipFileWithReader(file *zip.File, fileReader io.ReadCloser, dstPath string) error {
+func doCopyForUnZipFileWithReader(file *zip.File, fileReader io.ReadCloser, root *os.Root, name string) error {
 	defer fileReader.Close()
-	targetFile, err := os.OpenFile(dstPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+	targetFile, err := root.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode().Perm())
 	if err != nil {
-		err = gerror.Wrapf(err, `os.OpenFile failed for name "%s"`, dstPath)
-		return err
+		return gerror.Wrapf(err, `root.OpenFile failed for name "%s"`, name)
 	}
 	defer targetFile.Close()
 
 	if _, err = io.Copy(targetFile, fileReader); err != nil {
-		err = gerror.Wrapf(err, `io.Copy failed from "%s" to "%s"`, file.Name, dstPath)
-		return err
+		return gerror.Wrapf(err, `io.Copy failed from "%s" to "%s"`, file.Name, name)
 	}
 	return nil
 }

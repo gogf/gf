@@ -169,6 +169,43 @@ func TestMap(t *testing.T) {
 	})
 }
 
+func TestMapFieldTagAndValueTypes(t *testing.T) {
+	type User struct {
+		Id       int
+		Name     string `json:"name"`
+		Password string `json:"-"`
+		Nickname string `json:"nickname,omitempty"`
+		Score    float64
+		age      int
+	}
+	user := User{Id: 1, Name: "john", Password: "123", Score: 1.5, age: 18}
+
+	// Fields with and without a tag.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gconv.Map(user), g.Map{
+			"Id": 1, "name": "john", "nickname": "", "Score": 1.5,
+		})
+		t.Assert(gconv.Map(user, gconv.MapOption{OmitEmpty: true}), g.Map{
+			"Id": 1, "name": "john", "Score": 1.5,
+		})
+		t.Assert(gconv.Map(user, gconv.MapOption{Tags: []string{"orm"}}), g.Map{
+			"Id": 1, "name": "john", "nickname": "", "Score": 1.5,
+		})
+		t.Assert(gconv.Map(&user), gconv.Map(user))
+	})
+
+	// Values that are not a map or a struct.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gconv.Map([]string{"k1", "v1", "k2"}), g.Map{"k1": "v1", "k2": nil})
+		t.Assert(gconv.Map(`{"k1":"v1"}`), g.Map{"k1": "v1"})
+		t.Assert(gconv.Map([]byte(`{"k1":"v1"}`)), g.Map{"k1": "v1"})
+		t.AssertNil(gconv.Map("v1"))
+		t.AssertNil(gconv.Map([]byte("v1")))
+		t.AssertNil(gconv.Map(1))
+		t.AssertNil(gconv.Map(nil))
+	})
+}
+
 func TestMaps(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range mapTests {

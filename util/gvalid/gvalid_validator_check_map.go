@@ -49,11 +49,11 @@ func (v *Validator) doCheckMap(ctx context.Context, params any) Error {
 					if len(msgArray[k]) == 0 {
 						continue
 					}
-					array := strings.Split(ruleItem, ":")
+					ruleName, _, _ := strings.Cut(ruleItem, ":")
 					if _, ok := customMessage[name]; !ok {
 						customMessage[name] = make(map[string]string)
 					}
-					customMessage[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
+					customMessage[name].(map[string]string)[strings.TrimSpace(ruleName)] = strings.TrimSpace(msgArray[k])
 				}
 			}
 			checkRules = append(checkRules, fieldRule{

@@ -31,26 +31,24 @@ func Parse(s string) (result map[string]any, err error) {
 	result = make(map[string]any)
 	parts := strings.Split(s, "&")
 	for _, part := range parts {
-		pos := strings.Index(part, "=")
-		if pos <= 0 {
+		rawKey, rawValue, found := strings.Cut(part, "=")
+		if !found || rawKey == "" {
 			continue
 		}
-		key, err := url.QueryUnescape(part[:pos])
+		key, err := url.QueryUnescape(rawKey)
 		if err != nil {
-			err = gerror.Wrapf(err, `url.QueryUnescape failed for string "%s"`, part[:pos])
+			err = gerror.Wrapf(err, `url.QueryUnescape failed for string "%s"`, rawKey)
 			return nil, err
 		}
 
-		for len(key) > 0 && key[0] == ' ' {
-			key = key[1:]
-		}
+		key = strings.TrimLeft(key, " ")
 
 		if key == "" || key[0] == '[' {
 			continue
 		}
-		value, err := url.QueryUnescape(part[pos+1:])
+		value, err := url.QueryUnescape(rawValue)
 		if err != nil {
-			err = gerror.Wrapf(err, `url.QueryUnescape failed for string "%s"`, part[pos+1:])
+			err = gerror.Wrapf(err, `url.QueryUnescape failed for string "%s"`, rawValue)
 			return nil, err
 		}
 		// split into multiple keys

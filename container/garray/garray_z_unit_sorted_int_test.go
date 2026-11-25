@@ -314,6 +314,17 @@ func TestSortedIntArray_Range(t *testing.T) {
 		t.Assert(len(nsl), 1)
 		t.Assert(array2.Range(1, 2), []int{2})
 	})
+	// A negative end counts back from the end of the array.
+	gtest.C(t, func(t *gtest.T) {
+		a1 := []int{1, 3, 5, 2, 6, 7}
+		array1 := garray.NewSortedIntArrayFrom(a1)
+		array2 := garray.NewSortedIntArrayFrom(a1, true)
+		t.Assert(array1.Range(0, -1), []int{1, 2, 3, 5, 6})
+		t.Assert(array1.Range(-2, -4), []int{1, 2})
+		t.Assert(array1.Range(0, -10), nil)
+		t.Assert(array1.Range(-2, -10), nil)
+		t.Assert(array2.Range(4, -1), []int{6})
+	})
 }
 
 func TestSortedIntArray_Sum(t *testing.T) {
@@ -775,6 +786,21 @@ func TestSortedIntArray_UnmarshalValue(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Array.Slice(), g.Slice{1, 2, 3})
+	})
+	// A manually constructed array has a nil sorter and takes the defaults on unmarshal.
+	gtest.C(t, func(t *gtest.T) {
+		array := &garray.SortedIntArray{
+			SortedTArray: garray.NewSortedTArraySize(0, func(a, b int) int { return a - b }),
+		}
+		t.AssertNil(json.Unmarshal([]byte(`[3,1,2]`), array))
+		t.Assert(array.Slice(), g.SliceInt{1, 2, 3})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := &garray.SortedIntArray{
+			SortedTArray: garray.NewSortedTArraySize(0, func(a, b int) int { return a - b }),
+		}
+		t.AssertNil(array.UnmarshalValue([]int{3, 1, 2}))
+		t.Assert(array.Slice(), g.SliceInt{1, 2, 3})
 	})
 }
 func TestSortedIntArray_Filter(t *testing.T) {

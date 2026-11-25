@@ -33,7 +33,7 @@ func Pos(haystack, needle string, startOffset ...int) int {
 // PosRune acts like function Pos but considers `haystack` and `needle` as unicode string.
 func PosRune(haystack, needle string, startOffset ...int) int {
 	pos := Pos(haystack, needle, startOffset...)
-	if pos < 3 {
+	if pos < 2 {
 		return pos
 	}
 	return len([]rune(haystack[:pos]))
@@ -65,7 +65,7 @@ func PosI(haystack, needle string, startOffset ...int) int {
 // PosIRune acts like function PosI but considers `haystack` and `needle` as unicode string.
 func PosIRune(haystack, needle string, startOffset ...int) int {
 	pos := PosI(haystack, needle, startOffset...)
-	if pos < 3 {
+	if pos < 2 {
 		return pos
 	}
 	return len([]rune(haystack[:pos]))
@@ -99,7 +99,7 @@ func PosR(haystack, needle string, startOffset ...int) int {
 // PosRRune acts like function PosR but considers `haystack` and `needle` as unicode string.
 func PosRRune(haystack, needle string, startOffset ...int) int {
 	pos := PosR(haystack, needle, startOffset...)
-	if pos < 3 {
+	if pos < 2 {
 		return pos
 	}
 	return len([]rune(haystack[:pos]))
@@ -133,7 +133,7 @@ func PosRI(haystack, needle string, startOffset ...int) int {
 // PosRIRune acts like function PosRI but considers `haystack` and `needle` as unicode string.
 func PosRIRune(haystack, needle string, startOffset ...int) int {
 	pos := PosRI(haystack, needle, startOffset...)
-	if pos < 3 {
+	if pos < 2 {
 		return pos
 	}
 	return len([]rune(haystack[:pos]))

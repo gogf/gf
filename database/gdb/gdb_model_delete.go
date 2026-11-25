@@ -20,6 +20,9 @@ import (
 // see Model.Where.
 func (m *Model) Delete(where ...any) (result sql.Result, err error) {
 	var ctx = m.GetCtx()
+	if err = m.checkPartitionForWrite("DELETE"); err != nil {
+		return nil, err
+	}
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).Delete()
 	}
