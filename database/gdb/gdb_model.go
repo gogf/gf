@@ -10,6 +10,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -37,7 +39,7 @@ type Model struct {
 	limit           int               // Used for "select ... start, limit ..." statement.
 	option          int               // Option for extra operation features.
 	offset          int               // Offset statement for some databases grammar.
-	partition       string            // Partition table partition name.
+	partition       []string          // Partition table partition names.
 	data            any               // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
 	batch           int               // Batch number for batch Insert/Replace/Save operations.
 	filter          bool              // Filter data and where key-value pairs according to the fields of the table.
@@ -187,8 +189,53 @@ func (c *Core) With(objects ...any) *Model {
 // dao.User.Ctx(ctx).Partition（"p1","p2","p3").All()
 func (m *Model) Partition(partitions ...string) *Model {
 	model := m.getModel()
-	model.partition = gstr.Join(partitions, ",")
+	model.partition = partitions
 	return model
+}
+
+// checkPartitionForWrite returns an error if the model carries partition names and is
+// about to execute a statement of the given operation.
+//
+// A write statement that cannot be restricted to the named partitions is refused rather
+// than executed without the restriction: a query that over-returns is visible to the
+// caller, a delete or update that over-matches silently changes rows in partitions the
+// caller did not name.
+//
+// A driver without partition selection syntax leaves the names unused for SELECT as well,
+// so Partition() is inert there and a write is not refused: the names never had an effect.
+func (m *Model) checkPartitionForWrite(operation string) error {
+	if len(m.partition) == 0 {
+		return nil
+	}
+	if m.db.FormatPartitionClause(m.partition) == "" {
+		return nil
+	}
+	return gerror.NewCode(
+		gcode.CodeNotSupported,
+		fmt.Sprintf(
+			"Model.Partition() names the partitions of a SELECT statement only, "+
+				"%s is emitted without the clause and would affect every partition",
+			operation,
+		),
+	)
+}
+
+// partitionOperationOfInsert returns the name of the statement that an insert option emits,
+// for the message of checkPartitionForWrite.
+func partitionOperationOfInsert(option InsertOption) string {
+	switch option {
+	case InsertOptionReplace:
+		return "REPLACE"
+
+	case InsertOptionSave:
+		return "SAVE"
+
+	case InsertOptionIgnore:
+		return "INSERT IGNORE"
+
+	default:
+		return "INSERT"
+	}
 }
 
 // Model acts like Core.Model except it operates on transaction.
@@ -293,6 +340,10 @@ func (m *Model) Clone() *Model {
 	if n := len(m.fields); n > 0 {
 		newModel.fields = make([]any, n)
 		copy(newModel.fields, m.fields)
+	}
+	if n := len(m.partition); n > 0 {
+		newModel.partition = make([]string, n)
+		copy(newModel.partition, m.partition)
 	}
 	if n := len(m.fieldsEx); n > 0 {
 		newModel.fieldsEx = make([]any, n)
