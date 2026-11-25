@@ -45,7 +45,9 @@ func Decode(data []byte) (res map[string]any, err error) {
 			sectionBeginPos = strings.Index(line, "[")
 			sectionEndPos   = strings.Index(line, "]")
 		)
-		if sectionBeginPos >= 0 && sectionEndPos >= 2 {
+		// The end bracket must appear after the begin bracket, otherwise the
+		// section slice below panics on input like "a]b[c".
+		if sectionBeginPos >= 0 && sectionEndPos >= 2 && sectionEndPos > sectionBeginPos {
 			section = line[sectionBeginPos+1 : sectionEndPos]
 			if lastSection == "" {
 				lastSection = section
