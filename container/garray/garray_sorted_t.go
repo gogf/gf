@@ -345,12 +345,16 @@ func (a *SortedTArray[T]) Range(start int, end ...int) []T {
 	offsetEnd := len(a.array)
 	if len(end) > 0 && end[0] < offsetEnd {
 		offsetEnd = end[0]
-	}
-	if start > offsetEnd {
-		return nil
+		// A negative end counts back from the end of the array.
+		if offsetEnd < 0 {
+			offsetEnd += len(a.array)
+		}
 	}
 	if start < 0 {
 		start = 0
+	}
+	if start > offsetEnd {
+		return nil
 	}
 	array := ([]T)(nil)
 	if a.mu.IsSafe() {

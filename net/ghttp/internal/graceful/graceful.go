@@ -134,13 +134,13 @@ func New(
 		gs.fd = uintptr(fd)
 	}
 	if len(config.Listeners) > 0 {
-		addrArray := gstr.SplitAndTrim(address, ":")
-		addrPort, err := strconv.Atoi(addrArray[len(addrArray)-1])
-		if err == nil {
-			for _, v := range config.Listeners {
-				if listenerPort := (v.Addr().(*net.TCPAddr)).Port; listenerPort == addrPort {
-					gs.rawListener = v
-					break
+		if _, portStr, err := net.SplitHostPort(address); err == nil {
+			if addrPort, err := strconv.Atoi(portStr); err == nil {
+				for _, v := range config.Listeners {
+					if listenerPort := (v.Addr().(*net.TCPAddr)).Port; listenerPort == addrPort {
+						gs.rawListener = v
+						break
+					}
 				}
 			}
 		}
