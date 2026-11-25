@@ -7,16 +7,18 @@
 // This file unit-tests the net/gsvc package for paths that do not require
 // a live registry: Endpoint/Endpoints construction, Metadata CRUD,
 // LocalService creation and field accessors, NewServiceWithKV parsing,
-// SetRegistry/GetRegistry round-trips, and Nodes.String.
+// and SetRegistry/GetRegistry round-trips.
 // All tests run without any network or external service dependency.
 
 package gsvc_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // ─────────────────────── Endpoint ────────────────────────────────
@@ -123,10 +125,9 @@ func TestNewServiceWithName_BasicFields(t *testing.T) {
 func TestNewServiceWithName_GetKey(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		svc := gsvc.NewServiceWithName("calc")
-		// key must be non-empty and contain the service name
 		key := svc.GetKey()
-		t.AssertNE(key, "")
-		t.Assert(len(key) > 0, true)
+		t.Assert(gstr.HasPrefix(key, gsvc.DefaultSeparator), true)
+		t.Assert(gstr.Contains(key, "calc"), true)
 	})
 }
 
@@ -179,18 +180,39 @@ func TestNewServiceWithKV_EmptyValue(t *testing.T) {
 
 // ─────────────────────── SetRegistry / GetRegistry ───────────────
 
+type testRegistry struct {
+	id int
+}
+
+func (r *testRegistry) Register(ctx context.Context, service gsvc.Service) (gsvc.Service, error) {
+	return service, nil
+}
+
+func (r *testRegistry) Deregister(ctx context.Context, service gsvc.Service) error {
+	return nil
+}
+
+func (r *testRegistry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Service, error) {
+	return nil, nil
+}
+
+func (r *testRegistry) Watch(ctx context.Context, key string) (gsvc.Watcher, error) {
+	return nil, nil
+}
+
 func TestSetGetRegistry_NonNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		// SetRegistry requires a non-nil value; just verify get after set works.
-		original := gsvc.GetRegistry()
-		// Create a real service to prove the API is accessible; we cannot set nil.
-		// Just verify that GetRegistry returns whatever was set via SetRegistry by
-		// setting the value back to itself (or skipping if nil to avoid a panic).
-		if original != nil {
-			gsvc.SetRegistry(original)
-			t.Assert(gsvc.GetRegistry(), original)
-		}
-		// When no registry was ever set, GetRegistry returns nil.
-		// This just exercises the path without panicking.
+		registry := &testRegistry{id: 1}
+		gsvc.SetRegistry(registry)
+		t.Assert(gsvc.GetRegistry() == registry, true)
+	})
+}
+
+func TestSetRegistry_NilPanics(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer func() {
+			t.AssertNE(recover(), nil)
+		}()
+		gsvc.SetRegistry(nil)
 	})
 }
