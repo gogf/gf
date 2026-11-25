@@ -24,7 +24,7 @@ func Str(haystack string, needle string) string {
 	if pos == NotFoundIndex {
 		return ""
 	}
-	return haystack[pos+len([]byte(needle))-1:]
+	return haystack[pos:]
 }
 
 // StrEx returns part of `haystack` string starting from and excluding
@@ -37,7 +37,7 @@ func Str(haystack string, needle string) string {
 // StrEx("av.mp4", ".") -> "mp4"
 func StrEx(haystack string, needle string) string {
 	if s := Str(haystack, needle); s != "" {
-		return s[1:]
+		return s[len(needle):]
 	}
 	return ""
 }
