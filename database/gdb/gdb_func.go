@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Shared helpers for building SQL conditions, binding arguments, and formatting SQL.
+
 package gdb
 
 import (
@@ -444,7 +446,8 @@ type formatWhereHolderInput struct {
 	OmitNil   bool
 	OmitEmpty bool
 	Schema    string
-	Table     string // Table is used for fields mapping and filtering internally.
+	Table     string                 // Table is used for fields mapping and filtering internally.
+	fields    map[string]*TableField // Loaded once for time arguments in this group.
 }
 
 func isKeyValueCanBeOmitEmpty(omitEmpty bool, whereType string, key, value any) bool {
@@ -490,7 +493,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			if in.OmitEmpty && empty.IsEmpty(value) {
 				continue
 			}
-			newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
+			newArgs = in.formatWhereKeyValue(ctx, formatWhereKeyValueInput{
 				Db:     db,
 				Buffer: buffer,
 				Args:   newArgs,
@@ -520,7 +523,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 				if in.OmitEmpty && empty.IsEmpty(value) {
 					return true
 				}
-				newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
+				newArgs = in.formatWhereKeyValue(ctx, formatWhereKeyValueInput{
 					Db:        db,
 					Buffer:    buffer,
 					Args:      newArgs,
@@ -555,25 +558,6 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		// Mapping and filtering fields if `Table` is given.
 		if in.Table != "" {
 			data, _ = db.GetCore().mappingAndFilterData(ctx, in.Schema, in.Table, data, true)
-			// Convert field values to types supported by table records (e.g., time to string)
-			fieldTypeMap := db.GetCore().GetFieldTypeStrMap(ctx, in.Table, in.Schema)
-			for fieldName, fieldValue := range data {
-				switch fieldValue.(type) {
-				case time.Time, *time.Time, gtime.Time, *gtime.Time:
-					fieldType := fieldTypeMap[fieldName]
-					convFieldValue, err := db.GetCore().ConvertValueForField(
-						ctx,
-						fieldType,
-						fieldValue,
-					)
-					if err != nil || convFieldValue == nil {
-						continue
-					}
-					data[fieldName] = convFieldValue
-				default:
-					continue
-				}
-			}
 		}
 		// Put the struct attributes in sequence in Where statement.
 		var ormTagValue string
@@ -593,7 +577,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 				if in.OmitEmpty && empty.IsEmpty(foundValue) {
 					continue
 				}
-				newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
+				newArgs = in.formatWhereKeyValue(ctx, formatWhereKeyValueInput{
 					Db:        db,
 					Buffer:    buffer,
 					Args:      newArgs,
@@ -624,7 +608,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		// Where("id", 1)
 		// Where("id", g.Slice{1,2,3})
 		if gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, whereStr) && len(in.Args) == 1 {
-			newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
+			newArgs = in.formatWhereKeyValue(ctx, formatWhereKeyValueInput{
 				Db:        db,
 				Buffer:    buffer,
 				Args:      newArgs,
@@ -746,14 +730,48 @@ type formatWhereKeyValueInput struct {
 	Prefix    string        // Field prefix, eg: "user", "order", etc.
 }
 
+// convertTimeForField converts a time argument for a known column and keeps the original value on failure.
+func (holder *formatWhereHolderInput) convertTimeForField(ctx context.Context, db DB, key string, value any) any {
+	if holder.Table == "" || empty.IsNil(value) || (!isSqlIdentifier(key, false) && !quoteWordReg.MatchString(key)) {
+		return value
+	}
+	if holder.fields == nil {
+		table := db.GetCore().tableNameForFields(holder.Table)
+		if !isSqlIdentifier(table, true) {
+			return value
+		}
+		holder.fields = db.GetCore().tableFields(ctx, table, holder.Schema)
+	}
+	field := holder.fields[key]
+	if field == nil {
+		return value
+	}
+	converted, err := db.ConvertValueForField(ctx, field.typeName(), value)
+	if err != nil {
+		if logger := db.GetLogger(); logger != nil {
+			logger.Warningf(ctx, "cannot convert time for %s.%s, using the original value: %v", holder.Table, key, err)
+		}
+		return value
+	}
+	// Keep a zero time in the equality predicate even if the write converter maps it to NULL.
+	if converted == nil {
+		return value
+	}
+	return converted
+}
+
 // formatWhereKeyValue handles each key-value pair of the parameter map.
-func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []any) {
+func (holder *formatWhereHolderInput) formatWhereKeyValue(ctx context.Context, in formatWhereKeyValueInput) []any {
 	var (
 		quotedKey   = in.Db.GetCore().QuoteWord(in.Key)
 		holderCount = gstr.Count(quotedKey, "?")
 	)
 	if isKeyValueCanBeOmitEmpty(in.OmitEmpty, in.Type, quotedKey, in.Value) {
 		return in.Args
+	}
+	switch in.Value.(type) {
+	case time.Time, *time.Time, gtime.Time, *gtime.Time:
+		in.Value = holder.convertTimeForField(ctx, in.Db, in.Key, in.Value)
 	}
 	if in.Prefix != "" && !gstr.Contains(quotedKey, ".") {
 		quotedKey = in.Prefix + "." + quotedKey

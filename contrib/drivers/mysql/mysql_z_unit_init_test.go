@@ -29,7 +29,6 @@ const (
 	TestDbUser       = "root"
 	TestDbPass       = "12345678"
 	CreateTime       = "2018-10-24 10:00:00"
-	CreateDate       = "2018-10-24"
 )
 
 var (
@@ -155,8 +154,7 @@ func createInitTableWithDb(db gdb.DB, table ...string) (name string) {
 			"passport":    fmt.Sprintf(`user_%d`, i),
 			"password":    fmt.Sprintf(`pass_%d`, i),
 			"nickname":    fmt.Sprintf(`name_%d`, i),
-			"create_time": CreateTime,
-			"create_date": CreateDate,
+			"create_time": gtime.NewFromStr(CreateTime).String(),
 		})
 	}
 
