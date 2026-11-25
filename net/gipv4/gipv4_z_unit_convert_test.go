@@ -27,6 +27,13 @@ func TestIpToLongBigEndian(t *testing.T) {
 		var u2 = gipv4.Ip2long(ipv4)
 		t.Assert(u2, longBigEndian)
 	})
+	// Not an IPv4 address.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gipv4.IpToLongBigEndian("invalid"), 0)
+		t.Assert(gipv4.IpToLongBigEndian("::1"), 0)
+		t.Assert(gipv4.IpToLongBigEndian("2001:db8::1"), 0)
+		t.Assert(gipv4.Ip2long("2001:db8::1"), 0)
+	})
 }
 
 func TestLongToIpBigEndian(t *testing.T) {
@@ -43,6 +50,11 @@ func TestIpToLongLittleEndian(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var u = gipv4.IpToLongLittleEndian(ipv4)
 		t.Assert(u, longLittleEndian)
+	})
+	// Not an IPv4 address.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gipv4.IpToLongLittleEndian("invalid"), 0)
+		t.Assert(gipv4.IpToLongLittleEndian("2001:db8::1"), 0)
 	})
 }
 
