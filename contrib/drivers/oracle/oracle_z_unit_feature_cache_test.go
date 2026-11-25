@@ -165,17 +165,18 @@ func Test_Model_Cache_Force(t *testing.T) {
 			Name:     "test_cache_force_empty_value",
 			Force:    true,
 		}
-		_, err = db.Model(table).Data(g.Map{"id": 101, "passport": "", "password": "w", "nickname": "n", "create_time": "2018-10-24 10:00:00"}).InsertAndGetId()
+		// Oracle treats '' as NULL and rejects NOT NULL columns; use a non-empty placeholder.
+		_, err = db.Model(table).Data(g.Map{"id": 101, "passport": "placeholder", "password": "w", "nickname": "n", "create_time": "2018-10-24 10:00:00"}).InsertAndGetId()
 		t.AssertNil(err)
 		value, err := db.Model(table).Cache(valueOption).Where("id", 101).Value("passport")
 		t.AssertNil(err)
-		t.Assert(value.String(), "")
+		t.Assert(value.String(), "placeholder")
 
 		_, err = db.Model(table).Data(g.Map{"passport": "updated"}).Where("id", 101).Update()
 		t.AssertNil(err)
 		value, err = db.Model(table).Cache(valueOption).Where("id", 101).Value("passport")
 		t.AssertNil(err)
-		t.Assert(value.String(), "")
+		t.Assert(value.String(), "placeholder")
 	})
 }
 
