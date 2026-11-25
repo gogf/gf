@@ -6,10 +6,10 @@
 
 // This file unit-tests DryRun mode and Hook handlers on the Model API.
 // Neither feature requires a live database connection: DryRun is verified
-// through SetDryRun/GetDryRun round-trips; Hook behaviour is verified by
-// confirming that the hook callback intercepts the query and that any error
-// it returns reaches the caller — the callback short-circuits Next() so no
-// real connection is needed.
+// through SetDryRun/GetDryRun round-trips; for Hook, the select handler is
+// installed on a model and the model is queried directly — the handler
+// short-circuits Next() before any statement is committed, so the error it
+// returns is what the caller receives.
 
 package gdb
 
@@ -18,6 +18,8 @@ import (
 	"database/sql"
 	"testing"
 
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -52,9 +54,9 @@ func Test_DryRun_Toggle(t *testing.T) {
 
 // ─────────────────────────── Hook ─────────────────────────────────
 
-// Test_Hook_Model_ReturnsNewModel confirms that Hook returns a new model and
-// does not mutate the original — the standard clone-on-chain contract.
-func Test_Hook_Model_ReturnsNewModel(t *testing.T) {
+// Test_Hook_Model_UnsafeSetsHandlerInPlace confirms that Hook on the default
+// (unsafe) model sets the handler on the receiver and returns the receiver.
+func Test_Hook_Model_UnsafeSetsHandlerInPlace(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		db := newDialectFakeDB("id", "name")
 		m := db.Model("users")
@@ -64,8 +66,26 @@ func Test_Hook_Model_ReturnsNewModel(t *testing.T) {
 			},
 		}
 		mWithHook := m.Hook(hook)
-		// Hook must return a clone: hookHandler.Select set only on the clone.
+		t.Assert(mWithHook == m, true)
+		t.Assert(m.hookHandler.Select != nil, true)
+	})
+}
+
+// Test_Hook_Model_SafeReturnsClone confirms that Hook on a safe model returns a
+// clone carrying the handler and leaves the original model without one.
+func Test_Hook_Model_SafeReturnsClone(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		db := newDialectFakeDB("id", "name")
+		original := db.Model("users").Safe()
+		hook := HookHandler{
+			Select: func(_ context.Context, _ *HookSelectInput) (Result, error) {
+				return Result{}, nil
+			},
+		}
+		mWithHook := original.Hook(hook)
+		t.Assert(mWithHook == original, false)
 		t.Assert(mWithHook.hookHandler.Select != nil, true)
+		t.Assert(original.hookHandler.Select == nil, true)
 	})
 }
 
@@ -98,7 +118,7 @@ func Test_Hook_Model_ChainPreservesHandler(t *testing.T) {
 			},
 		}
 		// .Where() clones again after Hook — handler must survive.
-		m := db.Model("users").Hook(hook).Where("id", 1)
+		m := db.Model("users").Safe().Hook(hook).Where("id", 1)
 		t.Assert(m.hookHandler.Select != nil, true)
 	})
 }
@@ -131,8 +151,8 @@ func Test_Hook_AllHandlerTypes(t *testing.T) {
 }
 
 // Test_Hook_Model_OriginalUnchangedAfterChain verifies that chaining Hook+Where
-// does not affect the original model's hook state — a fresh db.Model() should
-// always start with no hook handlers set.
+// on a safe model keeps the handler on the derived model and leaves the original
+// model's hook state untouched.
 func Test_Hook_Model_OriginalUnchangedAfterChain(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		db := newDialectFakeDB("id", "name")
@@ -141,13 +161,36 @@ func Test_Hook_Model_OriginalUnchangedAfterChain(t *testing.T) {
 				return Result{}, nil
 			},
 		}
-		// A new model from db.Model() must have no hook.
-		original := db.Model("users")
+		original := db.Model("users").Safe()
+		derived := original.Hook(hook).Where("status", "active")
+		t.Assert(derived.hookHandler.Select != nil, true)
 		t.Assert(original.hookHandler.Select == nil, true)
+	})
+}
 
-		// Clone chain must not change that.
-		_ = original.Hook(hook).Where("status", "active")
-		original2 := db.Model("users")
-		t.Assert(original2.hookHandler.Select == nil, true)
+// Test_Hook_Model_SelectHandlerErrorReachesCaller verifies that querying a model
+// with a select handler calls the handler with the statement and returns the
+// handler's error to the caller.
+func Test_Hook_Model_SelectHandlerErrorReachesCaller(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		db := newDialectFakeDB("id", "name")
+		db.links = gmap.NewKVMap[ConfigNode, *sql.DB]()
+		var (
+			hookedSql   string
+			hookedTable string
+		)
+		m := db.Model("users").Hook(HookHandler{
+			Select: func(_ context.Context, in *HookSelectInput) (Result, error) {
+				hookedSql = in.Sql
+				hookedTable = in.Table
+				return nil, gerror.New("hook intercepted the query")
+			},
+		})
+		result, err := m.Where("id", 1).All()
+		t.Assert(len(result), 0)
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "hook intercepted the query")
+		t.Assert(hookedTable != "", true)
+		t.Assert(hookedSql != "", true)
 	})
 }

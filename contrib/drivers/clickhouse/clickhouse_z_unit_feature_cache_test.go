@@ -172,7 +172,7 @@ func Test_Model_Cache_Force(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(one.IsEmpty(), true)
 
-		_, err = db.Model(table).Data(g.Map{"id": 100, "passport": "p", "password": "w", "nickname": "n", "create_time": "2018-10-24 10:00:00"}).InsertAndGetId()
+		_, err = db.Model(table).Data(g.Map{"id": 100, "passport": "p", "password": "w", "nickname": "n", "create_time": "2018-10-24 10:00:00"}).Insert()
 		t.AssertNil(err)
 
 		one, err = db.Model(table).Cache(missingOption).Where("id", 100).One()
@@ -184,7 +184,7 @@ func Test_Model_Cache_Force(t *testing.T) {
 			Name:     "test_cache_force_empty_value",
 			Force:    true,
 		}
-		_, err = db.Model(table).Data(g.Map{"id": 101, "passport": "", "password": "w", "nickname": "n", "create_time": "2018-10-24 10:00:00"}).InsertAndGetId()
+		_, err = db.Model(table).Data(g.Map{"id": 101, "passport": "", "password": "w", "nickname": "n", "create_time": "2018-10-24 10:00:00"}).Insert()
 		t.AssertNil(err)
 		value, err := db.Model(table).Cache(valueOption).Where("id", 101).Value("passport")
 		t.AssertNil(err)
