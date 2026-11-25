@@ -79,11 +79,11 @@ func (v *Validator) doCheckStruct(ctx context.Context, object any) Error {
 					if len(msgArray[k]) == 0 {
 						continue
 					}
-					array := strings.Split(ruleKey, ":")
+					ruleName, _, _ := strings.Cut(ruleKey, ":")
 					if _, ok := customMessage[name]; !ok {
 						customMessage[name] = make(map[string]string)
 					}
-					customMessage[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
+					customMessage[name].(map[string]string)[strings.TrimSpace(ruleName)] = strings.TrimSpace(msgArray[k])
 				}
 			}
 			nameToRuleMap[name] = rule
@@ -203,11 +203,11 @@ func (v *Validator) doCheckStruct(ctx context.Context, object any) Error {
 				if len(msgArray[k]) == 0 {
 					continue
 				}
-				array := strings.Split(ruleKey, ":")
+				ruleName, _, _ := strings.Cut(ruleKey, ":")
 				if _, ok := customMessage[name]; !ok {
 					customMessage[name] = make(map[string]string)
 				}
-				customMessage[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
+				customMessage[name].(map[string]string)[strings.TrimSpace(ruleName)] = strings.TrimSpace(msgArray[k])
 			}
 		}
 	}

@@ -75,6 +75,31 @@ func TestDecode_LastLineWithoutNewline(t *testing.T) {
 	})
 }
 
+// A "]" placed before the "[" of a section header used to slice the line with a
+// reversed range and panic. Such a line is now ignored instead.
+func TestDecode_SectionBracketOrder(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		res, err := gini.Decode([]byte("[sec]\nab]c[d"))
+		t.AssertNil(err)
+		// The reversed bracket line is ignored, no key is recorded for the section.
+		t.Assert(res["sec"], nil)
+	})
+
+	// The reversed bracket order is only ignored, the following lines still parse.
+	gtest.C(t, func(t *gtest.T) {
+		res, err := gini.Decode([]byte("[sec]\nab]c[d\nip=127.0.0.1"))
+		t.AssertNil(err)
+		t.Assert(res["sec"].(map[string]any)["ip"], "127.0.0.1")
+	})
+
+	// A well formed header still works.
+	gtest.C(t, func(t *gtest.T) {
+		res, err := gini.Decode([]byte("[sec]\nip=127.0.0.1"))
+		t.AssertNil(err)
+		t.Assert(res["sec"].(map[string]any)["ip"], "127.0.0.1")
+	})
+}
+
 func TestEncode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		iniMap, err := gini.Decode([]byte(iniContent))

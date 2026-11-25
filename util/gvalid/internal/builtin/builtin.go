@@ -12,6 +12,7 @@ package builtin
 
 import (
 	"reflect"
+	"unicode/utf8"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -90,5 +91,5 @@ func valueLength(value any) int {
 
 	default:
 	}
-	return len(gconv.Runes(gconv.String(value)))
+	return utf8.RuneCountInString(gconv.String(value))
 }

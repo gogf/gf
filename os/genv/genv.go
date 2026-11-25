@@ -116,10 +116,10 @@ func Build(m map[string]string) []string {
 // MapFromEnv converts environment variables from slice to map.
 func MapFromEnv(envs []string) map[string]string {
 	m := make(map[string]string)
-	i := 0
 	for _, s := range envs {
-		i = strings.IndexByte(s, '=')
-		m[s[0:i]] = s[i+1:]
+		if key, value, found := strings.Cut(s, "="); found {
+			m[key] = value
+		}
 	}
 	return m
 }

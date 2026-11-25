@@ -163,6 +163,7 @@ func unZipFileWithReader(reader *zip.Reader, dstFolderPath string, zippedPrefix 
 	prefix := ""
 	if len(zippedPrefix) > 0 {
 		prefix = gstr.Replace(zippedPrefix[0], `\`, `/`)
+		prefix = strings.Trim(prefix, "/")
 	}
 	if err := os.MkdirAll(dstFolderPath, 0755); err != nil {
 		return err
@@ -178,10 +179,13 @@ func unZipFileWithReader(reader *zip.Reader, dstFolderPath string, zippedPrefix 
 		name = gstr.Replace(file.Name, `\`, `/`)
 		name = gstr.Trim(name, "/")
 		if prefix != "" {
-			if !strings.HasPrefix(name, prefix) {
+			// The prefix must match a whole path segment, otherwise prefix "a" would
+			// also match a sibling directory named "ab".
+			trimmedName, ok := strings.CutPrefix(name, prefix)
+			if !ok || (trimmedName != "" && trimmedName[0] != '/') {
 				continue
 			}
-			name = name[len(prefix):]
+			name = trimmedName
 		}
 		name = strings.TrimLeft(name, "/")
 		if name == "" {
