@@ -162,9 +162,40 @@ func Test_Model_Cache_NoExpire(t *testing.T) {
 func Test_Model_Cache_Force(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	// Note: Force cache test is intentionally empty. CacheOption.Force never caches an
-	// empty result, see https://github.com/gogf/gf/issues/4891, so the scenario cannot
-	// be asserted until that is fixed.
+	gtest.C(t, func(t *gtest.T) {
+		missingOption := gdb.CacheOption{
+			Duration: time.Second * 10,
+			Name:     "test_cache_force_empty",
+			Force:    true,
+		}
+		one, err := db.Model(table).Cache(missingOption).Where("id", 100).One()
+		t.AssertNil(err)
+		t.Assert(one.IsEmpty(), true)
+
+		_, err = db.Model(table).Data(g.Map{"id": 100, "passport": "p", "password": "w", "nickname": "n", "create_time": "2018-10-24 10:00:00"}).InsertAndGetId()
+		t.AssertNil(err)
+
+		one, err = db.Model(table).Cache(missingOption).Where("id", 100).One()
+		t.AssertNil(err)
+		t.Assert(one.IsEmpty(), true)
+
+		valueOption := gdb.CacheOption{
+			Duration: time.Second * 10,
+			Name:     "test_cache_force_empty_value",
+			Force:    true,
+		}
+		_, err = db.Model(table).Data(g.Map{"id": 101, "passport": "", "password": "w", "nickname": "n", "create_time": "2018-10-24 10:00:00"}).InsertAndGetId()
+		t.AssertNil(err)
+		value, err := db.Model(table).Cache(valueOption).Where("id", 101).Value("passport")
+		t.AssertNil(err)
+		t.Assert(value.String(), "")
+
+		_, err = db.Model(table).Data(g.Map{"passport": "updated"}).Where("id", 101).Update()
+		t.AssertNil(err)
+		value, err = db.Model(table).Cache(valueOption).Where("id", 101).Value("passport")
+		t.AssertNil(err)
+		t.Assert(value.String(), "")
+	})
 }
 
 // Test_Model_Cache_DisabledInTransaction tests cache is disabled in transactions
