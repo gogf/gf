@@ -726,11 +726,14 @@ func TestClient_Get_UrlWithFragment(t *testing.T) {
 		r.Response.Write(r.URL.RawQuery)
 	})
 	s.SetDumpRouterMap(false)
-	s.Start()
-	defer s.Shutdown()
-
-	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(s.Start())
+		defer func() {
+			t.AssertNil(s.Shutdown())
+		}()
+
+		time.Sleep(100 * time.Millisecond)
+
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
@@ -743,24 +746,28 @@ func TestClient_Get_UrlWithFragment(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(resp.ReadAllString(), `a=1`)
 		t.Assert(resp.Request.URL.Fragment, `frag`)
+		t.AssertNil(resp.Close())
 
 		// Existing query parameters are kept before the fragment.
 		resp, err = c.Get(ctx, `/path?b=2#frag`, params)
 		t.AssertNil(err)
 		t.Assert(resp.ReadAllString(), `b=2&a=1`)
 		t.Assert(resp.Request.URL.Fragment, `frag`)
+		t.AssertNil(resp.Close())
 
 		// An empty query is replaced by the parameters.
 		resp, err = c.Get(ctx, `/path?#frag`, params)
 		t.AssertNil(err)
 		t.Assert(resp.ReadAllString(), `a=1`)
 		t.Assert(resp.Request.URL.Fragment, `frag`)
+		t.AssertNil(resp.Close())
 
 		// A question mark inside the fragment does not start a query.
 		resp, err = c.Get(ctx, `/path#frag?b=2`, params)
 		t.AssertNil(err)
 		t.Assert(resp.ReadAllString(), `a=1`)
 		t.Assert(resp.Request.URL.Fragment, `frag?b=2`)
+		t.AssertNil(resp.Close())
 
 		// Raw parameters that are not encoded survive the fragment handling.
 		t.Assert(c.NoUrlEncode().GetContent(ctx, `/path#frag`, g.Map{
