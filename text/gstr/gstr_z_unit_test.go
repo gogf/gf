@@ -9,6 +9,7 @@
 package gstr_test
 
 import (
+	"math"
 	"testing"
 
 	"github.com/gogf/gf/v2/test/gtest"
@@ -188,6 +189,17 @@ func Test_NumberFormat(t *testing.T) {
 		// The sign is dropped when the number is rounded to zero.
 		t.Assert(gstr.NumberFormat(-0.001, 2, ".", ","), "0.00")
 		t.Assert(gstr.NumberFormat(-0.4, 0, ".", ","), "0")
+		t.Assert(gstr.NumberFormat(math.Copysign(0, -1), 2, ".", ","), "0.00")
+		t.Assert(gstr.NumberFormat(math.Copysign(0, -1), 0, ".", ","), "0")
+	})
+	// Rounding is exact for numbers that do not fit float64 once scaled.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.NumberFormat(9007199254740990, 2, ".", ","), "9,007,199,254,740,990.00")
+		t.Assert(gstr.NumberFormat(35184372088832.0234375, 2, ".", ","), "35,184,372,088,832.02")
+		t.Assert(gstr.NumberFormat(1.005, 2, ".", ","), "1.01")
+		t.Assert(gstr.NumberFormat(999.995, 2, ".", ","), "1,000.00")
+		t.Assert(gstr.NumberFormat(-99.5, 0, ".", ","), "-100")
+		t.Assert(gstr.NumberFormat(1e21, 1, ".", ""), "1000000000000000000000.0")
 	})
 }
 
