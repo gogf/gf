@@ -9,7 +9,6 @@ package garray
 import (
 	"bytes"
 	"slices"
-	"sort"
 	"strings"
 	"sync"
 
@@ -121,7 +120,7 @@ func (a *StrArray) Sort(reverse ...bool) *StrArray {
 			return strings.Compare(y, x)
 		})
 	} else {
-		sort.Strings(a.array)
+		slices.Sort(a.array)
 	}
 	return a
 }
