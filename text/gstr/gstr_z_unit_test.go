@@ -257,6 +257,12 @@ func Test_Str(t *testing.T) {
 		t.Assert(gstr.Str("name@example.com", ""), "")
 		t.Assert(gstr.Str("name@example.com", "z"), "")
 	})
+	// The `needle` of multiple bytes is included as a whole.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.Str("name@example.com", "@ex"), "@example.com")
+		t.Assert(gstr.Str("name@example.com", ".com"), ".com")
+		t.Assert(gstr.Str("我爱GoFrame", "爱"), "爱GoFrame")
+	})
 }
 
 func Test_StrEx(t *testing.T) {
@@ -264,6 +270,11 @@ func Test_StrEx(t *testing.T) {
 		t.Assert(gstr.StrEx("name@example.com", "@"), "example.com")
 		t.Assert(gstr.StrEx("name@example.com", ""), "")
 		t.Assert(gstr.StrEx("name@example.com", "z"), "")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.StrEx("name@example.com", "@ex"), "ample.com")
+		t.Assert(gstr.StrEx("name@example.com", ".com"), "")
+		t.Assert(gstr.StrEx("我爱GoFrame", "爱"), "GoFrame")
 	})
 }
 
