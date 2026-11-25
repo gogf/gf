@@ -180,7 +180,9 @@ func Test_Basic(t *testing.T) {
 		t.AssertNil(err)
 		defer rc.Close()
 
-		t.Assert(file.Content(), nil)
+		content := file.Content()
+		t.Assert(content != nil, true)
+		t.Assert(len(content), 0)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -189,6 +191,27 @@ func Test_Basic(t *testing.T) {
 		t.AssertNE(file, nil)
 		t.Assert(file.Name(), path)
 		t.Assert(file.Content(), "test2 content")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			tempDir  = gfile.Temp(gtime.TimestampNanoStr())
+			fileName = "empty.txt"
+		)
+		t.AssertNil(gfile.Mkdir(tempDir))
+		defer func() { t.AssertNil(gfile.Remove(tempDir)) }()
+		t.AssertNil(gfile.PutContents(gfile.Join(tempDir, fileName), ""))
+
+		data, err := gres.Pack(tempDir)
+		t.AssertNil(err)
+
+		resource := gres.New()
+		t.AssertNil(resource.Add(string(data)))
+		file := resource.Get(gfile.Basename(tempDir) + "/" + fileName)
+		t.AssertNE(file, nil)
+		content := file.Content()
+		t.Assert(content != nil, true)
+		t.Assert(len(content), 0)
 	})
 }
 

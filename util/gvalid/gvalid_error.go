@@ -172,8 +172,8 @@ func (e *validationError) FirstRule() (rule string, err error) {
 		for _, v := range e.rules {
 			if errorItemMap, ok := e.errors[v.Name]; ok {
 				for _, ruleItem := range strings.Split(v.Rule, "|") {
-					array := strings.Split(ruleItem, ":")
-					ruleItem = strings.TrimSpace(array[0])
+					ruleName, _, _ := strings.Cut(ruleItem, ":")
+					ruleItem = strings.TrimSpace(ruleName)
 					if err, ok = errorItemMap[ruleItem]; ok {
 						return ruleItem, err
 					}
@@ -233,7 +233,8 @@ func (e *validationError) Strings() (errs []string) {
 			if errorItemMap, ok := e.errors[v.Name]; ok {
 				// validation error checks.
 				for _, ruleItem := range strings.Split(v.Rule, "|") {
-					ruleItem = strings.TrimSpace(strings.Split(ruleItem, ":")[0])
+					ruleName, _, _ := strings.Cut(ruleItem, ":")
+					ruleItem = strings.TrimSpace(ruleName)
 					if err, ok := errorItemMap[ruleItem]; ok {
 						errs = append(errs, err.Error())
 					}

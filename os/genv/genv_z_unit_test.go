@@ -128,6 +128,14 @@ func Test_MapFromEnv(t *testing.T) {
 		m := genv.MapFromEnv([]string{"a=1", "b=2"})
 		t.Assert(m, g.Map{"a": 1, "b": 2})
 	})
+	gtest.C(t, func(t *gtest.T) {
+		m := genv.MapFromEnv([]string{"a=1", "without-equal-sign", "b=2"})
+		t.Assert(m, g.Map{"a": 1, "b": 2})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		m := genv.MapFromEnv([]string{"a=1=2"})
+		t.Assert(m, g.Map{"a": "1=2"})
+	})
 }
 
 func Test_MapToEnv(t *testing.T) {

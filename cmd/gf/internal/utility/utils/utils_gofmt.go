@@ -16,7 +16,7 @@ import (
 	"go/parser"
 	"go/token"
 	"path"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -366,7 +366,9 @@ func groupImportSpecs(specs []string) []string {
 			if index > 0 {
 				result = append(result, "")
 			}
-			sort.Slice(group, func(i, j int) bool { return importPathOf(group[i]) < importPathOf(group[j]) })
+			slices.SortFunc(group, func(a, b string) int {
+				return strings.Compare(importPathOf(a), importPathOf(b))
+			})
 			result = append(result, group...)
 		}
 		return result
@@ -386,8 +388,12 @@ func groupImportSpecs(specs []string) []string {
 			thirdImports = append(thirdImports, spec)
 		}
 	}
-	sort.Slice(stdImports, func(i, j int) bool { return importPathOf(stdImports[i]) < importPathOf(stdImports[j]) })
-	sort.Slice(thirdImports, func(i, j int) bool { return importPathOf(thirdImports[i]) < importPathOf(thirdImports[j]) })
+	slices.SortFunc(stdImports, func(a, b string) int {
+		return strings.Compare(importPathOf(a), importPathOf(b))
+	})
+	slices.SortFunc(thirdImports, func(a, b string) int {
+		return strings.Compare(importPathOf(a), importPathOf(b))
+	})
 
 	var result = make([]string, 0, len(specs)+1)
 	result = append(result, stdImports...)

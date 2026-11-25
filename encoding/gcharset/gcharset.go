@@ -20,9 +20,9 @@
 package gcharset
 
 import (
-	"bytes"
 	"context"
 	"io"
+	"strings"
 
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/ianaindex"
@@ -58,7 +58,7 @@ func Convert(dstCharset string, srcCharset string, src string) (dst string, err 
 	if srcCharset != "UTF-8" {
 		if e := getEncoding(srcCharset); e != nil {
 			tmp, err := io.ReadAll(
-				transform.NewReader(bytes.NewReader([]byte(src)), e.NewDecoder()),
+				transform.NewReader(strings.NewReader(src), e.NewDecoder()),
 			)
 			if err != nil {
 				return "", gerror.Wrapf(err, `convert string "%s" to utf8 failed`, srcCharset)
@@ -72,7 +72,7 @@ func Convert(dstCharset string, srcCharset string, src string) (dst string, err 
 	if dstCharset != "UTF-8" {
 		if e := getEncoding(dstCharset); e != nil {
 			tmp, err := io.ReadAll(
-				transform.NewReader(bytes.NewReader([]byte(src)), e.NewEncoder()),
+				transform.NewReader(strings.NewReader(src), e.NewEncoder()),
 			)
 			if err != nil {
 				return "", gerror.Wrapf(err, `convert string from utf8 to "%s" failed`, dstCharset)

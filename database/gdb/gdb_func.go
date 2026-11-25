@@ -515,13 +515,13 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		// For example, ListMap and TreeMap are ordered map,
 		// which implement `iIterator` interface and are index-friendly for where conditions.
 		if iterator, ok := in.Where.(iIterator); ok {
-			iterator.Iterator(func(key, value any) bool {
+			for key, value := range iterator.Iterator {
 				ketStr := gconv.String(key)
 				if in.OmitNil && empty.IsNil(value) {
-					return true
+					continue
 				}
 				if in.OmitEmpty && empty.IsEmpty(value) {
-					return true
+					continue
 				}
 				newArgs = in.formatWhereKeyValue(ctx, formatWhereKeyValueInput{
 					Db:        db,
@@ -533,8 +533,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 					Prefix:    in.Prefix,
 					Type:      in.Type,
 				})
-				return true
-			})
+			}
 			break
 		}
 		// Automatically mapping and filtering the struct attribute.

@@ -21,9 +21,12 @@ import (
 // v[a][a]=m&v[a][b]=n -> map[v:map[a:map[a:m b:n]]]
 // v[]=m&v[]=n         -> map[v:[m n]]
 // v[a][]=m&v[a][]=n   -> map[v:map[a:[m n]]]
-// v[][]=m&v[][]=n     -> map[v:[map[]]] // Currently does not support nested slice.
+// v[][]=m&v[][]=n     -> map[v:map[]] // `v` is an empty map, not a slice.
 // v=m&v[a]=n          -> error
 // a .[[b=c            -> map[a___[b:c]
+//
+// Nested slices like v[][] are not supported yet: their values are silently
+// discarded and no error is returned.
 func Parse(s string) (result map[string]any, err error) {
 	if s == "" {
 		return nil, nil
@@ -31,26 +34,24 @@ func Parse(s string) (result map[string]any, err error) {
 	result = make(map[string]any)
 	parts := strings.Split(s, "&")
 	for _, part := range parts {
-		pos := strings.Index(part, "=")
-		if pos <= 0 {
+		rawKey, rawValue, found := strings.Cut(part, "=")
+		if !found || rawKey == "" {
 			continue
 		}
-		key, err := url.QueryUnescape(part[:pos])
+		key, err := url.QueryUnescape(rawKey)
 		if err != nil {
-			err = gerror.Wrapf(err, `url.QueryUnescape failed for string "%s"`, part[:pos])
+			err = gerror.Wrapf(err, `url.QueryUnescape failed for string "%s"`, rawKey)
 			return nil, err
 		}
 
-		for len(key) > 0 && key[0] == ' ' {
-			key = key[1:]
-		}
+		key = strings.TrimLeft(key, " ")
 
 		if key == "" || key[0] == '[' {
 			continue
 		}
-		value, err := url.QueryUnescape(part[pos+1:])
+		value, err := url.QueryUnescape(rawValue)
 		if err != nil {
-			err = gerror.Wrapf(err, `url.QueryUnescape failed for string "%s"`, part[pos+1:])
+			err = gerror.Wrapf(err, `url.QueryUnescape failed for string "%s"`, rawValue)
 			return nil, err
 		}
 		// split into multiple keys

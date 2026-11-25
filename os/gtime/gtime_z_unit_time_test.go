@@ -554,3 +554,22 @@ func Test_UnmarshalJSON(t *testing.T) {
 		t.AssertNE(json.Unmarshal([]byte("{}"), &t1), nil)
 	})
 }
+
+// The timestamp of a time out of the range of UnixNano, which is the years 1678 to 2262.
+func Test_Timestamp_OutOfUnixNanoRange(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		timeTemp := gtime.NewFromTime(time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC))
+		t.Assert(timeTemp.Timestamp(), int64(253402300799))
+		t.Assert(timeTemp.TimestampMilli(), int64(253402300799000))
+		t.Assert(timeTemp.TimestampMicro(), int64(253402300799000000))
+		t.Assert(timeTemp.TimestampStr(), "253402300799")
+		t.Assert(timeTemp.TimestampMilliStr(), "253402300799000")
+		t.Assert(timeTemp.TimestampMicroStr(), "253402300799000000")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		timeTemp := gtime.NewFromTime(time.Date(1600, 1, 1, 0, 0, 0, 0, time.UTC))
+		t.Assert(timeTemp.Timestamp(), int64(-11676096000))
+		t.Assert(timeTemp.TimestampMilli(), int64(-11676096000000))
+		t.Assert(timeTemp.TimestampMicro(), int64(-11676096000000000))
+	})
+}

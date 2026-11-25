@@ -8,6 +8,7 @@ package gjson
 
 import (
 	"bytes"
+	"strings"
 
 	"github.com/gogf/gf/v2/encoding/gini"
 	"github.com/gogf/gf/v2/encoding/gproperties"
@@ -140,13 +141,7 @@ func IsValidDataType(dataType ContentType) bool {
 }
 
 func trimBOM(data []byte) []byte {
-	if len(data) < 3 {
-		return data
-	}
-	if data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF {
-		data = data[3:]
-	}
-	return data
+	return bytes.TrimPrefix(data, []byte{0xEF, 0xBB, 0xBF})
 }
 
 // loadContentWithOptions creates a Json object from given content.
@@ -238,7 +233,7 @@ func loadContentWithOptions(data []byte, options Options) (*Json, error) {
 	return nil, gerror.NewCodef(
 		gcode.CodeInvalidParameter,
 		`unsupported type "%s" for loading, all supported types: %s`,
-		options.Type, gstr.Join(allSupportedTypes, ", "),
+		options.Type, strings.Join(allSupportedTypes, ", "),
 	)
 }
 

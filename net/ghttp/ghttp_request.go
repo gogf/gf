@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -17,7 +18,6 @@ import (
 	"github.com/gogf/gf/v2/os/gsession"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gview"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
 )
@@ -78,9 +78,10 @@ type Request struct {
 
 // staticFile is the file struct for static file service.
 type staticFile struct {
-	File  *gres.File // Resource file object.
-	Path  string     // File path.
-	IsDir bool       // Is directory.
+	File     *gres.File // Resource file object.
+	Path     string     // File path.
+	RootPath string     // Root directory of `Path` for searched disk files, empty for explicit paths.
+	IsDir    bool       // Is directory.
 }
 
 // newRequest creates and returns a new request object.
@@ -176,11 +177,18 @@ func (r *Request) GetHeader(key string, def ...string) string {
 // GetHost returns current request host name, which might be a domain or an IP without port.
 func (r *Request) GetHost() string {
 	if len(r.parsedHost) == 0 {
-		array, _ := gregex.MatchString(`(.+):(\d+)`, r.Host)
-		if len(array) > 1 {
-			r.parsedHost = array[1]
-		} else {
+		host, port, err := net.SplitHostPort(r.Host)
+		switch {
+		case err != nil:
 			r.parsedHost = r.Host
+		case host == "":
+			return r.Host
+		case port == "" || strings.Trim(port, "0123456789") != "":
+			r.parsedHost = r.Host
+		case strings.HasPrefix(r.Host, "["):
+			r.parsedHost = "[" + host + "]"
+		default:
+			r.parsedHost = host
 		}
 	}
 	return r.parsedHost
@@ -204,8 +212,7 @@ func (r *Request) GetClientIp() string {
 	}
 	realIps := r.Header.Get(HeaderXForwardedFor)
 	if realIps != "" && len(realIps) != 0 && !strings.EqualFold("unknown", realIps) {
-		ipArray := strings.Split(realIps, ",")
-		r.clientIp = ipArray[0]
+		r.clientIp, _, _ = strings.Cut(realIps, ",")
 	}
 	if r.clientIp == "" {
 		for _, headerName := range clientIpHeaderNames {
@@ -223,11 +230,11 @@ func (r *Request) GetClientIp() string {
 
 // GetRemoteIp returns the ip from RemoteAddr.
 func (r *Request) GetRemoteIp() string {
-	array, _ := gregex.MatchString(`(.+):(\d+)`, r.RemoteAddr)
-	if len(array) > 1 {
-		return strings.Trim(array[1], "[]")
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
 	}
-	return r.RemoteAddr
+	return host
 }
 
 // GetSchema returns the schema of this request.

@@ -24,7 +24,7 @@ func Str(haystack string, needle string) string {
 	if pos == NotFoundIndex {
 		return ""
 	}
-	return haystack[pos+len([]byte(needle))-1:]
+	return haystack[pos:]
 }
 
 // StrEx returns part of `haystack` string starting from and excluding
@@ -37,7 +37,7 @@ func Str(haystack string, needle string) string {
 // StrEx("av.mp4", ".") -> "mp4"
 func StrEx(haystack string, needle string) string {
 	if s := Str(haystack, needle); s != "" {
-		return s[1:]
+		return s[len(needle):]
 	}
 	return ""
 }
@@ -162,7 +162,7 @@ func SubStrRune(str string, start int, length ...int) (substr string) {
 // StrLimit("123456", 3)      -> "123..."
 // StrLimit("123456", 3, "~") -> "123~"
 func StrLimit(str string, length int, suffix ...string) string {
-	if len(str) < length {
+	if len(str) <= length {
 		return str
 	}
 	suffixStr := defaultSuffixForStrLimit
@@ -181,7 +181,7 @@ func StrLimit(str string, length int, suffix ...string) string {
 // StrLimitRune("一起学习吧！", 2, "~") -> "一起~"
 func StrLimitRune(str string, length int, suffix ...string) string {
 	runes := []rune(str)
-	if len(runes) < length {
+	if len(runes) <= length {
 		return str
 	}
 	suffixStr := defaultSuffixForStrLimit

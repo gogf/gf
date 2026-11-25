@@ -72,8 +72,8 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 	// which makes this rule separated into multiple rules.
 	ruleItems := strings.Split(strings.TrimSpace(in.Rule), "|")
 	for i := 0; ; {
-		array := strings.Split(ruleItems[i], ":")
-		if builtin.GetRule(array[0]) == nil && v.getCustomRuleFunc(array[0]) == nil {
+		ruleName, _, _ := strings.Cut(ruleItems[i], ":")
+		if builtin.GetRule(ruleName) == nil && v.getCustomRuleFunc(ruleName) == nil {
 			// ============================ SPECIAL ============================
 			// Special `regex` and `not-regex` rules.
 			// Merge the regex pattern if there are special chars, like ':', '|', in pattern.

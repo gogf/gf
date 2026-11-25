@@ -97,3 +97,17 @@ func Test_Grpcx_Grpc_Server_Config_Logger(t *testing.T) {
 	})
 
 }
+
+func Test_Grpcx_Grpc_Server_Config_Timeout(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		c := Server.NewConfig()
+		t.AssertNil(c.SetWithMap(map[string]any{
+			"timeout": "30s",
+			"methodTimeouts": map[string]any{
+				"/protobuf.Greeter/SayHello": "5s",
+			},
+		}))
+		t.Assert(c.Timeout, 30*time.Second)
+		t.Assert(c.MethodTimeouts["/protobuf.Greeter/SayHello"], 5*time.Second)
+	})
+}

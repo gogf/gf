@@ -13,7 +13,16 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
+
+func Test_LoadContentType_Unsupported(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		_, err := gjson.LoadContentType("unknown", []byte("x"))
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "json, xml, yaml, toml, ini, properties"), true)
+	})
+}
 
 func Test_Load_JSON1(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)

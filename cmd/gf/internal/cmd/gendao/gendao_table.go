@@ -8,9 +8,10 @@ package gendao
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -104,8 +105,8 @@ func generateTableFields(fields map[string]*gdb.TableField) string {
 	for fieldName := range fields {
 		fieldNames = append(fieldNames, fieldName)
 	}
-	sort.Slice(fieldNames, func(i, j int) bool {
-		return fields[fieldNames[i]].Index < fields[fieldNames[j]].Index // asc
+	slices.SortFunc(fieldNames, func(a, b string) int {
+		return cmp.Compare(fields[a].Index, fields[b].Index) // asc
 	})
 	for index, fieldName := range fieldNames {
 		field := fields[fieldName]

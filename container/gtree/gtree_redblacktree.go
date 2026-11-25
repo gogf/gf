@@ -380,10 +380,9 @@ func (tree *RedBlackTree) Flip(comparator ...func(v1, v2 any) int) {
 	} else {
 		t = NewRedBlackTree(tree.comparator, tree.mu.IsSafe())
 	}
-	tree.IteratorAsc(func(key, value any) bool {
+	for key, value := range tree.IteratorAsc {
 		t.doSet(value, key)
-		return true
-	})
+	}
 	tree.Clear()
 	tree.Sets(t.Map())
 }

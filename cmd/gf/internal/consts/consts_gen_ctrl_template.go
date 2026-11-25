@@ -34,6 +34,16 @@ func {NewFuncName}() {InterfaceName} {
 }
 `
 
+const TemplateGenCtrlControllerNewType = `
+type {CtrlName} struct{}
+`
+
+const TemplateGenCtrlControllerNewFuncOnly = `
+func {NewFuncName}() {InterfaceName} {
+	return &{CtrlName}{}
+}
+`
+
 const TemplateGenCtrlControllerMethodFunc = `
 package {Module}
 

@@ -102,7 +102,10 @@ func (s *StorageRedisHashTable) RemoveAll(ctx context.Context, sessionId string)
 // This function is called ever when session starts.
 func (s *StorageRedisHashTable) GetSession(ctx context.Context, sessionId string, ttl time.Duration) (*gmap.StrAnyMap, error) {
 	intlog.Printf(ctx, "StorageRedisHashTable.GetSession: %s, %v", sessionId, ttl)
-	v, err := s.redis.Exists(ctx, s.sessionIdToRedisKey(sessionId))
+	// EXPIRE both checks that the session exists and refreshes its TTL. Requests that only read
+	// the session do not mark it dirty, and the session data is not kept in memory, so Close
+	// would never refresh the TTL and the session would expire while it is still being used.
+	v, err := s.redis.Expire(ctx, s.sessionIdToRedisKey(sessionId), int64(ttl.Seconds()))
 	if err != nil {
 		return nil, err
 	}

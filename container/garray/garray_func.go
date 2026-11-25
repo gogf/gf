@@ -7,7 +7,7 @@
 package garray
 
 import (
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -30,53 +30,16 @@ func defaultComparatorStr(a, b string) int {
 // defaultSorter is a generic sorting function that sorts a slice of comparable types
 // using the provided comparator function.
 func defaultSorter[T comparable](values []T, comparator func(a T, b T) int) {
-	sort.Slice(values, func(i, j int) bool {
-		return comparator(values[i], values[j]) < 0
-	})
+	slices.SortFunc(values, comparator)
 }
 
-// quickSortInt is the quick-sorting algorithm implements for int.
-func quickSortInt(values []int, comparator func(a, b int) int) {
-	if len(values) <= 1 {
-		return
+// cloneSlice returns a non-nil copy of the given slice.
+func cloneSlice[T any](values []T) []T {
+	cloned := slices.Clone(values)
+	if cloned == nil {
+		cloned = make([]T, 0)
 	}
-	mid, i := values[0], 1
-	head, tail := 0, len(values)-1
-	for head < tail {
-		if comparator(values[i], mid) > 0 {
-			values[i], values[tail] = values[tail], values[i]
-			tail--
-		} else {
-			values[i], values[head] = values[head], values[i]
-			head++
-			i++
-		}
-	}
-	values[head] = mid
-	quickSortInt(values[:head], comparator)
-	quickSortInt(values[head+1:], comparator)
-}
-
-// quickSortStr is the quick-sorting algorithm implements for string.
-func quickSortStr(values []string, comparator func(a, b string) int) {
-	if len(values) <= 1 {
-		return
-	}
-	mid, i := values[0], 1
-	head, tail := 0, len(values)-1
-	for head < tail {
-		if comparator(values[i], mid) > 0 {
-			values[i], values[tail] = values[tail], values[i]
-			tail--
-		} else {
-			values[i], values[head] = values[head], values[i]
-			head++
-			i++
-		}
-	}
-	values[head] = mid
-	quickSortStr(values[:head], comparator)
-	quickSortStr(values[head+1:], comparator)
+	return cloned
 }
 
 // tToAnySlice converts []T to []any

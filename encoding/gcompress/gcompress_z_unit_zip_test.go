@@ -7,6 +7,7 @@
 package gcompress_test
 
 import (
+	"archive/zip"
 	"bytes"
 	"testing"
 
@@ -15,6 +16,75 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
+
+func Test_UnZipContent_Prefix(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var buf bytes.Buffer
+		writer := zip.NewWriter(&buf)
+		for _, entry := range []struct {
+			name    string
+			content string
+		}{
+			{"a/1.txt", "1"},
+			// A sibling directory sharing the prefix must not be extracted.
+			{"ab/2.txt", "2"},
+			{"b/3.txt", "3"},
+		} {
+			w, err := writer.Create(entry.name)
+			t.AssertNil(err)
+			_, err = w.Write([]byte(entry.content))
+			t.AssertNil(err)
+		}
+		t.AssertNil(writer.Close())
+
+		tempDirPath := gfile.Temp(gtime.TimestampNanoStr())
+		t.AssertNil(gfile.Mkdir(tempDirPath))
+		defer func() { t.AssertNil(gfile.Remove(tempDirPath)) }()
+
+		t.AssertNil(gcompress.UnZipContent(buf.Bytes(), tempDirPath, "a"))
+		t.Assert(gfile.GetContents(gfile.Join(tempDirPath, "1.txt")), "1")
+		t.Assert(gfile.Exists(gfile.Join(tempDirPath, "2.txt")), false)
+		t.Assert(gfile.Exists(gfile.Join(tempDirPath, "b")), false)
+	})
+}
+
+// The prefix matches a whole path segment only, so "a" neither matches "ab/2.txt"
+// nor the file "abc.txt", and a trailing slash in the prefix makes no difference.
+func Test_UnZipContent_PrefixBoundary(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var buf bytes.Buffer
+		writer := zip.NewWriter(&buf)
+		for _, entry := range []struct {
+			name    string
+			content string
+		}{
+			{"a/1.txt", "1"},
+			{"ab/2.txt", "2"},
+			{"abc.txt", "3"},
+			{"a", "4"},
+		} {
+			w, err := writer.Create(entry.name)
+			t.AssertNil(err)
+			_, err = w.Write([]byte(entry.content))
+			t.AssertNil(err)
+		}
+		t.AssertNil(writer.Close())
+
+		for _, prefix := range []string{"a", "a/", "/a", "/a/", "a\\"} {
+			tempDirPath := gfile.Temp(gtime.TimestampNanoStr())
+			t.AssertNil(gfile.Mkdir(tempDirPath))
+
+			t.AssertNil(gcompress.UnZipContent(buf.Bytes(), tempDirPath, prefix))
+			// Only the entries directly under "a/" are extracted.
+			t.Assert(gfile.Exists(gfile.Join(tempDirPath, "1.txt")), true)
+			t.Assert(gfile.Exists(gfile.Join(tempDirPath, "2.txt")), false)
+			t.Assert(gfile.Exists(gfile.Join(tempDirPath, "abc.txt")), false)
+			t.Assert(gfile.Exists(gfile.Join(tempDirPath, "ab")), false)
+
+			t.AssertNil(gfile.Remove(tempDirPath))
+		}
+	})
+}
 
 func Test_ZipPath(t *testing.T) {
 	// file
