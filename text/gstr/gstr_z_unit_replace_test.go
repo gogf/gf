@@ -55,7 +55,20 @@ func Test_ReplaceI_LowerCaseSize(t *testing.T) {
 		t.Assert(gstr.ReplaceI("İabc İabc", "ABC", "x"), "İx İx")
 		t.Assert(gstr.ReplaceI("\xffabc", "ABC", "x"), "\xffx")
 		t.Assert(gstr.ReplaceI("İstanbul", "İSTANBUL", "x"), "x")
-		t.Assert(gstr.ReplaceI("abk", "K", "x"), "abk")
+		t.Assert(gstr.ReplaceI("abk", "K", "x"), "abx")
+		t.Assert(gstr.ReplaceI("abK", "k", "x"), "abx")
+		// The match is replaced as a whole, even if it is longer or shorter than the search string.
+		t.Assert(gstr.ReplaceI("İstanbul İstanbul", "istanbul", "x"), "x x")
+		t.Assert(gstr.ReplaceI("istanbul istanbul", "İstanbul", "x"), "x x")
+		t.Assert(gstr.ReplaceI("İstanbul İstanbul", "istanbul", "x", 1), "x İstanbul")
+		t.Assert(gstr.ReplaceI("Ångström Ωmega", "å", "x"), "xngström Ωmega")
+		t.Assert(gstr.ReplaceI("Ångström Ωmega", "ω", "x"), "Ångström xmega")
+		t.Assert(gstr.ReplaceIFunc("aİb İ", "i", func(s string) string {
+			return "[" + s + "]"
+		}), "a[İ]b [İ]")
+		t.Assert(gstr.ReplaceIFunc("ab", "İİİ", func(s string) string {
+			return "[" + s + "]"
+		}), "ab")
 		t.Assert(gstr.ReplaceIFunc("İİabc", "ABC", func(s string) string {
 			return "[" + s + "]"
 		}), "İİ[abc]")

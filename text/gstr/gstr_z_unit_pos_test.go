@@ -70,6 +70,20 @@ func Test_PosI(t *testing.T) {
 		t.Assert(gstr.PosI("İstanbul", "İSTANBUL"), 0)
 		t.Assert(gstr.PosIRune("İabc", "ABC"), 1)
 	})
+	// A letter matches its other case, even if the two have different byte lengths.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.PosI("İstanbul", "istanbul"), 0)
+		t.Assert(gstr.PosI("istanbul", "İstanbul"), 0)
+		t.Assert(gstr.PosI("abk", "K"), 2)
+		t.Assert(gstr.PosI("abK", "k"), 2)
+		t.Assert(gstr.PosI("xÅ", "å"), 1)
+		t.Assert(gstr.PosI("xω", "Ω"), 1)
+		t.Assert(gstr.PosI("İİx", "X"), 4)
+		t.Assert(gstr.ContainsI("İstanbul", "ISTANBUL"), true)
+		// A part of a character is not a match.
+		t.Assert(gstr.PosI("世界", "\xb8"), -1)
+		t.Assert(gstr.PosI("世界\xb8", "\xb8"), 6)
+	})
 }
 
 func Test_PosIRune(t *testing.T) {
@@ -149,6 +163,9 @@ func Test_PosRI(t *testing.T) {
 		t.Assert(gstr.PosRI("abcİABC", "abc"), 5)
 		t.Assert(gstr.PosRI("\xffabc", "ABC"), 1)
 		t.Assert(gstr.PosRIRune("abcİABC", "abc"), 4)
+		t.Assert(gstr.PosRI("İstanbul İstanbul", "istanbul"), 10)
+		t.Assert(gstr.PosRI("istanbul istanbul", "İstanbul"), 9)
+		t.Assert(gstr.PosRI("\xb8世界", "\xb8"), 0)
 	})
 }
 

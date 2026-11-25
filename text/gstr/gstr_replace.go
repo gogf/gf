@@ -33,27 +33,19 @@ func ReplaceI(origin, search, replace string, count ...int) string {
 	if n == 0 || search == "" {
 		return origin
 	}
-	var (
-		searchLength  = len(search)
-		replaceLength = len(replace)
-		searchLower   = toLowerKeepSize(search)
-		originLower   string
-		pos           int
-	)
-	for {
-		// The positions found in originLower are used to cut origin.
-		originLower = toLowerKeepSize(origin)
-		if pos = Pos(originLower, searchLower, pos); pos != -1 {
-			origin = origin[:pos] + replace + origin[pos+searchLength:]
-			pos += replaceLength
-			if n--; n == 0 {
-				break
-			}
-		} else {
+	var result strings.Builder
+	for ; n != 0; n-- {
+		// The match is cut by its byte range in origin, which can differ in length from search.
+		start, end := indexFold(origin, search, false)
+		if start == -1 {
 			break
 		}
+		result.WriteString(origin[:start])
+		result.WriteString(replace)
+		origin = origin[end:]
 	}
-	return origin
+	result.WriteString(origin)
+	return result.String()
 }
 
 // ReplaceByArray returns a copy of `origin`,
@@ -151,14 +143,7 @@ func ReplaceIFunc(origin string, search string, f func(string) string) string {
 		return origin
 	}
 	var (
-		searchLen = len(search)
-		originLen = len(origin)
-	)
-	// If search string is longer than origin string, no match is possible
-	if searchLen > originLen {
-		return origin
-	}
-	var (
+		originLen  = len(origin)
 		result     strings.Builder
 		lastMatch  int
 		currentPos int
@@ -167,18 +152,19 @@ func ReplaceIFunc(origin string, search string, f func(string) string) string {
 	result.Grow(originLen)
 
 	for currentPos < originLen {
-		pos := PosI(origin[currentPos:], search)
+		// The match is cut by its byte range in origin, which can differ in length from search.
+		pos, end := indexFold(origin[currentPos:], search, false)
 		if pos == -1 {
 			break
 		}
 		pos += currentPos
+		end += currentPos
 		// Append unmatched portion
 		result.WriteString(origin[lastMatch:pos])
 		// Apply replacement function and append result
-		match := origin[pos : pos+searchLen]
-		result.WriteString(f(match))
+		result.WriteString(f(origin[pos:end]))
 		// Update positions
-		lastMatch = pos + searchLen
+		lastMatch = end
 		currentPos = lastMatch
 	}
 	// Append remaining unmatched portion
