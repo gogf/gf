@@ -90,10 +90,19 @@ func TestSafeContent(t *testing.T) {
 
 	// compress content
 	var (
-		compressShortData, _ = gcompress.Gzip([]byte(shortData))
-		compressStandData, _ = gcompress.Gzip([]byte(standData))
-		compressLongData, _  = gcompress.Gzip([]byte(longData))
+		compressShortData []byte
+		compressStandData []byte
+		compressLongData  []byte
 	)
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		compressShortData, err = gcompress.Gzip([]byte(shortData))
+		t.AssertNil(err)
+		compressStandData, err = gcompress.Gzip([]byte(standData))
+		t.AssertNil(err)
+		compressLongData, err = gcompress.Gzip([]byte(longData))
+		t.AssertNil(err)
+	})
 	gtest.C(t, func(t *gtest.T) {
 
 		t1, err := gtrace.SafeContentForHttp(compressShortData, gzipHeader)
@@ -110,37 +119,57 @@ func TestSafeContent(t *testing.T) {
 	})
 }
 
-func Test_SafeContentForHttp_ContentEncoding(t *testing.T) {
+func Test_SafeContentForHttp_GzipEncoded(t *testing.T) {
+	var (
+		content        = strings.Repeat("gzip content ", 10)
+		compressedData []byte
+	)
 	gtest.C(t, func(t *gtest.T) {
-		content := strings.Repeat("gzip content ", 10)
-		compressedData, err := gcompress.Gzip([]byte(content))
+		var err error
+		compressedData, err = gcompress.Gzip([]byte(content))
 		t.AssertNil(err)
+	})
 
-		// Content codings are case-insensitive.
-		for _, encoding := range []string{"gzip", "GZip", "GZIP"} {
-			header := http.Header{"Content-Encoding": []string{encoding}}
-			s, err := gtrace.SafeContentForHttp(compressedData, header)
+	gtest.C(t, func(t *gtest.T) {
+		for _, c := range []struct {
+			name   string
+			header http.Header
+			data   []byte
+			expect string
+		}{
+			// Content codings are case-insensitive.
+			{"lower case", http.Header{"Content-Encoding": {"gzip"}}, compressedData, content},
+			{"mixed case", http.Header{"Content-Encoding": {"GZip"}}, compressedData, content},
+			{"upper case", http.Header{"Content-Encoding": {"GZIP"}}, compressedData, content},
+			// Parameters and surrounding blanks of the content coding are ignored.
+			{"blank padded", http.Header{"Content-Encoding": {" gzip "}}, compressedData, content},
+			{"valid parameter", http.Header{"Content-Encoding": {"gzip; level=1"}}, compressedData, content},
+			{"parameter with blank", http.Header{"Content-Encoding": {"GZip ; level=1"}}, compressedData, content},
+			{"invalid parameter", http.Header{"Content-Encoding": {"gzip; foo"}}, compressedData, content},
+			// Every coding of a comma separated value is checked.
+			{"second coding in one line", http.Header{"Content-Encoding": {"br, gzip"}}, compressedData, content},
+			// Every Content-Encoding header line is checked.
+			{"second header line", http.Header{"Content-Encoding": {"br", "gzip"}}, compressedData, content},
+			// Other content codings are not decompressed.
+			{"missing header", http.Header{}, []byte(content), content},
+			{"empty coding", http.Header{"Content-Encoding": {""}}, []byte(content), content},
+			{"identity coding", http.Header{"Content-Encoding": {"identity"}}, []byte(content), content},
+			{"br coding", http.Header{"Content-Encoding": {"br"}}, []byte(content), content},
+			// `x-gzip` is an alias of `gzip` in RFC 9110, but it is not handled on purpose.
+			{"x-gzip coding", http.Header{"Content-Encoding": {"x-gzip"}}, []byte(content), content},
+			// The coding name is compared as a whole, not by prefix.
+			{"prefixed coding", http.Header{"Content-Encoding": {"gzipx"}}, []byte(content), content},
+		} {
+			s, err := gtrace.SafeContentForHttp(c.data, c.header)
 			t.AssertNil(err)
-			t.Assert(s, content)
+			t.Assert(s, c.expect)
 		}
-		// Parameters on the content coding are ignored, valid or not.
-		for _, encoding := range []string{" gzip ", "gzip; level=1", "GZip ; level=1", "gzip; foo"} {
-			header := http.Header{"Content-Encoding": []string{encoding}}
-			s, err := gtrace.SafeContentForHttp(compressedData, header)
-			t.AssertNil(err)
-			t.Assert(s, content)
-		}
-		// Every Content-Encoding header line is checked.
-		header := http.Header{"Content-Encoding": []string{"br", "gzip"}}
-		s, err := gtrace.SafeContentForHttp(compressedData, header)
-		t.AssertNil(err)
-		t.Assert(s, content)
-		// Other content codings are not decompressed.
-		for _, encoding := range []string{"", "identity", "br", "x-gzip"} {
-			header := http.Header{"Content-Encoding": []string{encoding}}
-			s, err := gtrace.SafeContentForHttp([]byte(content), header)
-			t.AssertNil(err)
-			t.Assert(s, content)
-		}
+	})
+
+	// The error is returned if the content is declared gzip-encoded but is not.
+	gtest.C(t, func(t *gtest.T) {
+		s, err := gtrace.SafeContentForHttp([]byte(content), http.Header{"Content-Encoding": {"gzip"}})
+		t.AssertNE(err, nil)
+		t.Assert(s, "")
 	})
 }
