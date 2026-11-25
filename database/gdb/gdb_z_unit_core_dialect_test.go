@@ -228,9 +228,11 @@ func Test_Model_SoftDeleting_QualifiedTable(t *testing.T) {
 }
 
 // Test_Model_Count_GroupBy asserts that Count of a grouped model counts the rows of a derived table
-// whose column is not named, as a name could resolve in place of a column of the same name in a
-// database resolving the names of the select list in WHERE and GROUP BY, like ClickHouse; the SQL
-// Server driver names it, as SQL Server requires every column of a derived table to have a name.
+// whose single column is COUNT(1), regardless of the model fields. The column is not named, as a
+// name could resolve in place of a column of the same name in a database resolving the names of the
+// select list in WHERE and GROUP BY, like ClickHouse; the SQL Server driver names it, as SQL Server
+// requires every column of a derived table to have a name. The fields are not counted in the derived
+// table, as a multi-field list would form an invalid COUNT(a, b, ...) expression.
 func Test_Model_Count_GroupBy(t *testing.T) {
 	var ctx = context.Background()
 	gtest.C(t, func(t *gtest.T) {
@@ -245,11 +247,17 @@ func Test_Model_Count_GroupBy(t *testing.T) {
 			},
 			{
 				db.Model("t").Fields("name").Group("name"),
-				`SELECT COUNT(1) FROM (SELECT COUNT("name") FROM "t" GROUP BY "name") count_alias`,
+				`SELECT COUNT(1) FROM (SELECT COUNT(1) FROM "t" GROUP BY "name") count_alias`,
 			},
 			{
 				db.Model("t").Distinct().Fields("name").Group("name"),
-				`SELECT COUNT(1) FROM (SELECT COUNT(DISTINCT "name") FROM "t" GROUP BY "name") count_alias`,
+				`SELECT COUNT(1) FROM (SELECT COUNT(1) FROM "t" GROUP BY "name") count_alias`,
+			},
+			{
+				// Multiple fields with a group by, see issue #4340: the derived table must select a
+				// single COUNT(1) instead of wrapping the field list in an invalid COUNT(...).
+				db.Model("t").Fields("id", "name", "MAX(id) AS m").Group("name"),
+				`SELECT COUNT(1) FROM (SELECT COUNT(1) FROM "t" GROUP BY "name") count_alias`,
 			},
 			{
 				db.Model("t").Fields("name"),
