@@ -151,4 +151,3 @@ func Test_Hook_Model_OriginalUnchangedAfterChain(t *testing.T) {
 		t.Assert(original2.hookHandler.Select == nil, true)
 	})
 }
-
