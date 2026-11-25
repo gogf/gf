@@ -7,6 +7,7 @@
 package gfile_test
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
@@ -369,6 +370,35 @@ func Test_ReadLines_Error(t *testing.T) {
 	})
 }
 
+func Test_ReadLines_LongLine(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			longLine = strings.Repeat("a", 70*1024)
+			filePath = filepath.Join(t.TempDir(), "file.log")
+			getList  []string
+		)
+		t.AssertNil(os.WriteFile(filePath, []byte(longLine+"\nsecond"), 0o644))
+		err := gfile.ReadLines(filePath, func(line string) error {
+			getList = append(getList, line)
+			return nil
+		})
+		t.AssertNil(err)
+		t.Assert(len(getList), 2)
+		t.Assert(getList[0], longLine)
+		t.Assert(getList[1], "second")
+	})
+}
+
+func Test_ReadLines_ScannerError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Reading a directory fails at scanner read, not at open.
+		err := gfile.ReadLines(t.TempDir(), func(line string) error {
+			return nil
+		})
+		t.Assert(err != nil, true)
+	})
+}
+
 func Test_ReadLinesBytes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -396,5 +426,34 @@ func Test_ReadLinesBytes_Error(t *testing.T) {
 		)
 		err := gfile.ReadLinesBytes(teatFile, callback)
 		t.AssertEQ(err.Error(), "custom error")
+	})
+}
+
+func Test_ReadLinesBytes_LongLine(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			longLine = strings.Repeat("a", 70*1024)
+			filePath = filepath.Join(t.TempDir(), "file.log")
+			getList  [][]byte
+		)
+		t.AssertNil(os.WriteFile(filePath, []byte(longLine+"\nsecond"), 0o644))
+		err := gfile.ReadLinesBytes(filePath, func(line []byte) error {
+			getList = append(getList, bytes.Clone(line))
+			return nil
+		})
+		t.AssertNil(err)
+		t.Assert(len(getList), 2)
+		t.Assert(string(getList[0]), longLine)
+		t.Assert(string(getList[1]), "second")
+	})
+}
+
+func Test_ReadLinesBytes_ScannerError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Reading a directory fails at scanner read, not at open.
+		err := gfile.ReadLinesBytes(t.TempDir(), func(line []byte) error {
+			return nil
+		})
+		t.Assert(err != nil, true)
 	})
 }
