@@ -262,13 +262,21 @@ func (c *Client) newGetRequest(method, url, params, mediaType string) (req *http
 			httpHeaderContentTypeXml:
 			bodyBuffer = bytes.NewBuffer([]byte(params))
 		default:
-			// It appends the parameters to the url
+			// It appends the parameters to the query part of the url
 			// if http method is GET and Content-Type is not specified.
-			if gstr.Contains(url, "?") {
-				url = url + "&" + params
+			// The fragment is kept at the end, as parameters appended
+			// after it would not be sent to the server.
+			base, fragment, hasFragment := strings.Cut(url, "#")
+			base, query, hasQuery := strings.Cut(base, "?")
+			if hasQuery && query != "" {
+				base += "?" + query + "&" + params
 			} else {
-				url = url + "?" + params
+				base += "?" + params
 			}
+			if hasFragment {
+				base += "#" + fragment
+			}
+			url = base
 			bodyBuffer = bytes.NewBuffer(nil)
 		}
 	} else {

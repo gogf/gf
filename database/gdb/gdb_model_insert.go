@@ -252,6 +252,9 @@ func (m *Model) Save(data ...any) (result sql.Result, err error) {
 
 // doInsertWithOption inserts data with option parameter.
 func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOption) (result sql.Result, err error) {
+	if err = m.checkPartitionForWrite(partitionOperationOfInsert(insertOption)); err != nil {
+		return nil, err
+	}
 	defer func() {
 		if err == nil {
 			m.checkAndRemoveSelectCache(ctx)

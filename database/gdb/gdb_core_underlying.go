@@ -555,6 +555,13 @@ func (c *Core) FoldIdentifier(name string) string {
 	return name
 }
 
+// FormatPartitionClause returns the SQL clause selecting the given table partitions.
+// Default returns an empty string, which leaves the names unused; drivers supporting
+// partition selection (e.g. MySQL) override it.
+func (c *Core) FormatPartitionClause(partitions []string) string {
+	return ""
+}
+
 // GetTableNameForFields returns the table name in the table expression `table` that TableFields is called with.
 // Default is the bare name of the first table; drivers resolving qualified names (e.g. Oracle) override.
 func (c *Core) GetTableNameForFields(table string) string {
