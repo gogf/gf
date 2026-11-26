@@ -532,7 +532,11 @@ func (a *SortedTArray[T]) Clone() (newArray *SortedTArray[T]) {
 	a.mu.RLock()
 	array := cloneSlice(a.array)
 	a.mu.RUnlock()
-	return NewSortedTArrayFrom[T](array, a.comparator, a.mu.IsSafe())
+	newArray = NewSortedTArrayFrom[T](array, a.comparator, a.mu.IsSafe())
+	// The copy keeps the unique mark and the sorter of current array.
+	newArray.unique = a.unique
+	newArray.sorter = a.sorter
+	return newArray
 }
 
 // Clear deletes all items of current array.
@@ -851,5 +855,9 @@ func (a *SortedTArray[T]) DeepCopy() any {
 	for i, v := range a.array {
 		newSlice[i], _ = deepcopy.Copy(v).(T)
 	}
-	return NewSortedTArrayFrom[T](newSlice, a.comparator, a.mu.IsSafe())
+	newArray := NewSortedTArrayFrom[T](newSlice, a.comparator, a.mu.IsSafe())
+	// The copy keeps the unique mark and the sorter of current array.
+	newArray.unique = a.unique
+	newArray.sorter = a.sorter
+	return newArray
 }
