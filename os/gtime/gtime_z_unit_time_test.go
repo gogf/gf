@@ -553,6 +553,16 @@ func Test_UnmarshalJSON(t *testing.T) {
 		var t1 gtime.Time
 		t.AssertNE(json.Unmarshal([]byte("{}"), &t1), nil)
 	})
+	// The JSON null on a non-pointer field.
+	gtest.C(t, func(t *gtest.T) {
+		var v struct {
+			Id   int
+			Time gtime.Time
+		}
+		t.AssertNil(json.Unmarshal([]byte(`{"Id":1,"Time":null}`), &v))
+		t.Assert(v.Id, 1)
+		t.Assert(v.Time.IsZero(), true)
+	})
 }
 
 // The timestamp of a time out of the range of UnixNano, which is the years 1678 to 2262.
