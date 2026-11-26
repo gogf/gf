@@ -11,8 +11,8 @@ import (
 	"testing"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/gogf/gf/v2/test/gtest"
@@ -104,13 +104,18 @@ func Test_Tracing_Extract_PreservesBaggage(t *testing.T) {
 		ctx, span := tracer.Start(context.Background(), "baggage-test")
 		defer span.End()
 
-		// Confirm the span is sampled so Inject produces a traceparent.
-		t.Assert(span.SpanContext().IsSampled() || !trace.SpanFromContext(ctx).SpanContext().IsValid() || true, true)
+		member, err := baggage.NewMember("test-key", "test-value")
+		t.AssertNil(err)
+		bag, err := baggage.New(member)
+		t.AssertNil(err)
+		ctx = baggage.ContextWithBaggage(ctx, bag)
 
 		md := metadata.New(nil)
 		tracing.Inject(ctx, md)
-		bag, _ := tracing.Extract(context.Background(), md)
-		// Baggage may be empty when none was set; just assert no panic.
-		_ = bag
+
+		extracted, sc := tracing.Extract(context.Background(), md)
+		t.Assert(sc.IsValid(), true)
+		t.Assert(sc.TraceID(), span.SpanContext().TraceID())
+		t.Assert(extracted.Member("test-key").Value(), "test-value")
 	})
 }
