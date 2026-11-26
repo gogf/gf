@@ -28,7 +28,7 @@ func toLowerOffsets(s string) (lower string, offsets []int) {
 		return strings.ToLower(s), nil
 	}
 	buf := make([]byte, 0, len(s))
-	offsets = make([]int, 0, len(s)+1)
+	offsets = make([]int, 0, len(s))
 	for i := 0; i < len(s); {
 		r, size := utf8.DecodeRuneInString(s[i:])
 		n := len(buf)

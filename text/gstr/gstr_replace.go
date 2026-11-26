@@ -33,16 +33,22 @@ func ReplaceI(origin, search, replace string, count ...int) string {
 	if n == 0 || search == "" {
 		return origin
 	}
+	// The match is cut by its byte range in origin, which can differ in length from search.
+	start, end := indexFold(origin, search, false)
+	if start == -1 {
+		return origin
+	}
 	var result strings.Builder
-	for ; n != 0; n-- {
-		// The match is cut by its byte range in origin, which can differ in length from search.
-		start, end := indexFold(origin, search, false)
-		if start == -1 {
-			break
-		}
+	for {
 		result.WriteString(origin[:start])
 		result.WriteString(replace)
 		origin = origin[end:]
+		if n--; n == 0 {
+			break
+		}
+		if start, end = indexFold(origin, search, false); start == -1 {
+			break
+		}
 	}
 	result.WriteString(origin)
 	return result.String()

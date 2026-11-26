@@ -11,6 +11,7 @@ package gstr_test
 import (
 	"strings"
 	"testing"
+	"unsafe"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -63,6 +64,10 @@ func Test_ReplaceI_LowerCaseSize(t *testing.T) {
 		t.Assert(gstr.ReplaceI("İstanbul İstanbul", "istanbul", "x", 1), "x İstanbul")
 		t.Assert(gstr.ReplaceI("Ångström Ωmega", "å", "x"), "xngström Ωmega")
 		t.Assert(gstr.ReplaceI("Ångström Ωmega", "ω", "x"), "Ångström xmega")
+		// The origin string is returned as it is, not a copy of it, if nothing is replaced.
+		origin := strings.Repeat("İstanbul", 2)
+		result := gstr.ReplaceI(origin, "abc", "x")
+		t.Assert(unsafe.StringData(result) == unsafe.StringData(origin), true)
 		t.Assert(gstr.ReplaceIFunc("aİb İ", "i", func(s string) string {
 			return "[" + s + "]"
 		}), "a[İ]b [İ]")
