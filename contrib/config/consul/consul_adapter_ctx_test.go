@@ -62,13 +62,12 @@ func TestConsulAdapterCtx_GetAdapterCtx(t *testing.T) {
 
 func TestConsulAdapterCtx_GetContentDefault(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		// GetContent returns gjson.New(nil) when unset.
+		// GetContent returns an empty gjson.New(nil) when unset, not a Go nil.
 		// Path and operation remain at zero values when nothing was set.
 		ctx := consul.NewAdapterCtx()
 		t.Assert(ctx.GetPath(), "")
 		t.Assert(ctx.GetOperation(), gcfg.OperationType(""))
-		// Verify GetContent call does not panic and returns a usable object
-		content := ctx.GetContent()
-		_ = content // gjson.New(nil) is a valid empty JSON object
+		t.Assert(ctx.GetContent() == nil, false)
+		t.Assert(ctx.GetContent().IsNil(), true)
 	})
 }
