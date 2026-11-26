@@ -38,7 +38,10 @@ func Test_StorageRedis_SetSession_GetSession(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		storage := gsession.NewStorageRedis(redis, "gstest:")
 		id := guid.S()
-		defer redis.Del(ctx, "gstest:"+id)
+		defer func() {
+			_, err := redis.Del(ctx, "gstest:"+id)
+			t.AssertNil(err)
+		}()
 
 		manager := gsession.New(time.Second*30, storage)
 		s := manager.New(ctx, id)
@@ -79,7 +82,10 @@ func Test_StorageRedis_UpdateTTL(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		storage := gsession.NewStorageRedis(redis, "gstest:")
 		id := guid.S()
-		defer redis.Del(ctx, "gstest:"+id)
+		defer func() {
+			_, err := redis.Del(ctx, "gstest:"+id)
+			t.AssertNil(err)
+		}()
 
 		manager := gsession.New(time.Second*30, storage)
 		s := manager.New(ctx, id)
@@ -104,7 +110,9 @@ func Test_StorageRedisHashTable_SetGet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		storage := gsession.NewStorageRedisHashTable(redis, "gshttest:")
 		id := guid.S()
-		defer storage.RemoveAll(ctx, id)
+		defer func() {
+			t.AssertNil(storage.RemoveAll(ctx, id))
+		}()
 
 		t.AssertNil(storage.Set(ctx, id, "field1", "value1", time.Second*30))
 		v, err := storage.Get(ctx, id, "field1")
@@ -117,7 +125,9 @@ func Test_StorageRedisHashTable_SetMap_Data(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		storage := gsession.NewStorageRedisHashTable(redis, "gshttest:")
 		id := guid.S()
-		defer storage.RemoveAll(ctx, id)
+		defer func() {
+			t.AssertNil(storage.RemoveAll(ctx, id))
+		}()
 
 		t.AssertNil(storage.SetMap(ctx, id, map[string]any{"a": 1, "b": "two"}, time.Second*30))
 		data, err := storage.Data(ctx, id)
@@ -131,7 +141,9 @@ func Test_StorageRedisHashTable_GetSize(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		storage := gsession.NewStorageRedisHashTable(redis, "gshttest:")
 		id := guid.S()
-		defer storage.RemoveAll(ctx, id)
+		defer func() {
+			t.AssertNil(storage.RemoveAll(ctx, id))
+		}()
 
 		t.AssertNil(storage.Set(ctx, id, "x", 1, time.Second*30))
 		t.AssertNil(storage.Set(ctx, id, "y", 2, time.Second*30))
@@ -145,7 +157,9 @@ func Test_StorageRedisHashTable_Remove(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		storage := gsession.NewStorageRedisHashTable(redis, "gshttest:")
 		id := guid.S()
-		defer storage.RemoveAll(ctx, id)
+		defer func() {
+			t.AssertNil(storage.RemoveAll(ctx, id))
+		}()
 
 		t.AssertNil(storage.Set(ctx, id, "del", "me", time.Second*30))
 		t.AssertNil(storage.Remove(ctx, id, "del"))
@@ -157,11 +171,15 @@ func Test_StorageRedisHashTable_Remove(t *testing.T) {
 
 func Test_StorageRedisHashTable_GetSetSession(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		manager := gsession.New(time.Second*30, gsession.NewStorageRedisHashTable(redis, "gshttest:"))
+		storage := gsession.NewStorageRedisHashTable(redis, "gshttest:")
+		manager := gsession.New(time.Second*30, storage)
 		s := manager.New(ctx)
 		t.AssertNil(s.Set("hello", "world"))
 		id, err := s.Id()
 		t.AssertNil(err)
+		defer func() {
+			t.AssertNil(storage.RemoveAll(ctx, id))
+		}()
 		t.AssertNil(s.Close())
 
 		s2 := manager.New(ctx, id)
@@ -183,7 +201,10 @@ func Test_StorageRedisHashTable_ReadRefreshesTTL(t *testing.T) {
 		id, err := s.Id()
 		t.AssertNil(err)
 		t.AssertNil(s.Close())
-		defer redis.Del(ctx, "test_session_ttl:"+id)
+		defer func() {
+			_, err := redis.Del(ctx, "test_session_ttl:"+id)
+			t.AssertNil(err)
+		}()
 
 		// Requests that only read the session must keep it alive.
 		for range 3 {
