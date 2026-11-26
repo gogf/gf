@@ -184,6 +184,11 @@ func Test_ChunkSplit(t *testing.T) {
 		t.Assert(gstr.ChunkSplit("我爱123", 1, "#"), "我#爱#1#2#3#")
 		t.Assert(gstr.ChunkSplit("1234", 1, ""), "1\r\n2\r\n3\r\n4\r\n")
 	})
+	// Non-positive chunkLen.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.ChunkSplit("1234", -1, "#"), "1234#")
+		t.Assert(gstr.ChunkSplit("1234", 0, "#"), "1234#")
+	})
 }
 
 func Test_SplitAndTrim(t *testing.T) {

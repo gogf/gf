@@ -62,7 +62,8 @@ func ChunkSplit(body string, chunkLen int, end string) string {
 	}
 	runes, endRunes := []rune(body), []rune(end)
 	l := len(runes)
-	if l <= 1 || l < chunkLen {
+	// A non-positive chunkLen cannot split anything, the loop below would never advance with it.
+	if l <= 1 || l < chunkLen || chunkLen <= 0 {
 		return body + end
 	}
 	ns := make([]rune, 0, len(runes)+len(endRunes))
