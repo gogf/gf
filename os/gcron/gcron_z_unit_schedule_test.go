@@ -50,6 +50,44 @@ func TestSlash_InvalidInterval(t *testing.T) {
 	})
 }
 
+// TestPattern_ValueOutOfRange checks that a value out of the field range is rejected,
+// as it can never meet any time.
+func TestPattern_ValueOutOfRange(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, spec := range []string{
+			"60 * * * * *",
+			"* 60 * * * *",
+			"* * 24 * * *",
+			"* * * 0 * *",
+			"* * * 32 * *",
+			"* * * * 0 *",
+			"* * * * 13 *",
+			"* * * * * 7",
+			"0-60 * * * * *",
+			"70/5 * * * * *",
+			"0,61 * * * * *",
+			"# 60 * * * *",
+		} {
+			s, err := newSchedule(spec)
+			t.AssertNE(err, nil)
+			t.AssertNil(s)
+		}
+	})
+	// The bounds of every field are still accepted.
+	gtest.C(t, func(t *gtest.T) {
+		for _, spec := range []string{
+			"0 0 0 1 1 0",
+			"59 59 23 31 12 6",
+			"0-59 0-59 0-23 1-31 1-12 0-6",
+			"59/5 * * * Dec Sat",
+		} {
+			s, err := newSchedule(spec)
+			t.AssertNil(err)
+			t.AssertNE(s, nil)
+		}
+	})
+}
+
 func TestNext(t *testing.T) {
 	runs := []struct {
 		time, spec string
