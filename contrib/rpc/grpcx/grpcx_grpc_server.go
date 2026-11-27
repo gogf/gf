@@ -37,6 +37,10 @@ type GrpcServer struct {
 	waitGroup sync.WaitGroup
 	registrar gsvc.Registrar
 	serviceMu sync.Mutex
+
+	// listenerMu protects listener, which is assigned by the goroutine started in Start while
+	// it is read by GetListenedPort/GetListenedAddress from other goroutines.
+	listenerMu sync.RWMutex
 }
 
 // Service implements gsvc.Service interface.
@@ -99,17 +103,19 @@ func (s *GrpcServer) Service(services ...gsvc.Service) {
 // Run starts the server in blocking way.
 func (s *GrpcServer) Run() {
 	var (
-		err error
-		ctx = gctx.GetInitCtx()
+		err      error
+		ctx      = gctx.GetInitCtx()
+		listener net.Listener
 	)
 	// Create listener to bind listening ip and port.
-	s.listener, err = net.Listen("tcp", s.config.Address)
+	listener, err = net.Listen("tcp", s.config.Address)
 	if err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
+	s.setListener(listener)
 
 	// Start listening.
-	go s.doServeAsynchronously(ctx)
+	go s.doServeAsynchronously(ctx, listener)
 
 	// Service register.
 	s.doServiceRegister()
@@ -121,8 +127,8 @@ func (s *GrpcServer) Run() {
 	s.doSignalListen()
 }
 
-func (s *GrpcServer) doServeAsynchronously(ctx context.Context) {
-	if err := s.Server.Serve(s.listener); err != nil {
+func (s *GrpcServer) doServeAsynchronously(ctx context.Context, listener net.Listener) {
+	if err := s.Server.Serve(listener); err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
 }
@@ -245,11 +251,26 @@ func (s *GrpcServer) GetListenedAddress() string {
 }
 
 // GetListenedPort retrieves and returns one port which is listened to by current server.
+// It returns -1 if the server has not started listening yet.
 func (s *GrpcServer) GetListenedPort() int {
-	if ln := s.listener; ln != nil {
+	if ln := s.getListener(); ln != nil {
 		return ln.Addr().(*net.TCPAddr).Port
 	}
 	return -1
+}
+
+// setListener sets the listener of current server in a concurrency safe way.
+func (s *GrpcServer) setListener(listener net.Listener) {
+	s.listenerMu.Lock()
+	defer s.listenerMu.Unlock()
+	s.listener = listener
+}
+
+// getListener returns the listener of current server in a concurrency safe way.
+func (s *GrpcServer) getListener() net.Listener {
+	s.listenerMu.RLock()
+	defer s.listenerMu.RUnlock()
+	return s.listener
 }
 
 func (s *GrpcServer) calculateListenedEndpoints(ctx context.Context) gsvc.Endpoints {
