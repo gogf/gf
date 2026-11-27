@@ -530,6 +530,10 @@ func (t *Time) UnmarshalJSON(b []byte) error {
 		t.Time = time.Time{}
 		return nil
 	}
+	// The JSON null is a no-op, as it is for time.Time and json.Unmarshal itself.
+	if string(b) == "null" {
+		return nil
+	}
 	newTime, err := StrToTime(string(bytes.Trim(b, `"`)))
 	if err != nil {
 		return err
