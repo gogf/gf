@@ -164,7 +164,7 @@ See [`cmd/gf`](cmd/gf/README.MD) for the full command list and usage details.
 💖 [Thanks to all the contributors who made GoFrame possible](https://github.com/gogf/gf/graphs/contributors) 💖
 
 <a href="https://github.com/gogf/gf/graphs/contributors">
-<img src="https://goframe.org/img/contributors.svg?version=v2.10.5" alt="goframe contributors"/>
+<img src="https://goframe.org/img/contributors.svg?version=v2.10.6" alt="goframe contributors"/>
 </a>
 
 ## License

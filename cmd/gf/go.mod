@@ -7,14 +7,14 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.6
 	github.com/charmbracelet/huh v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.10.5
-	github.com/gogf/gf/contrib/drivers/dm/v2 v2.10.5
-	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.10.5
-	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.10.5
-	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.10.5
-	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.10.5
-	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.10.5
-	github.com/gogf/gf/v2 v2.10.5
+	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.10.6
+	github.com/gogf/gf/contrib/drivers/dm/v2 v2.10.6
+	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.10.6
+	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.10.6
+	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.10.6
+	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.10.6
+	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.10.6
+	github.com/gogf/gf/v2 v2.10.6
 	github.com/gogf/selfupdate v0.0.0-20231215043001-5c48c528462f
 	github.com/olekukonko/tablewriter v1.1.0
 	github.com/schollz/progressbar/v3 v3.15.0
