@@ -1,6 +1,6 @@
 module github.com/gogf/gf/cmd/gf/v2
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/charmbracelet/bubbles v0.21.1-0.20250623103423-23b8fd6302d7
@@ -18,8 +18,8 @@ require (
 	github.com/gogf/selfupdate v0.0.0-20231215043001-5c48c528462f
 	github.com/olekukonko/tablewriter v1.1.0
 	github.com/schollz/progressbar/v3 v3.15.0
-	golang.org/x/mod v0.27.0
-	golang.org/x/tools v0.36.0
+	golang.org/x/mod v0.43.0
+	golang.org/x/tools v0.53.1-0.20261126161324-9b1bd87ef490
 )
 
 require (
@@ -87,13 +87,13 @@ require (
 	go.opentelemetry.io/otel/sdk v1.45.0 // indirect
 	go.opentelemetry.io/otel/trace v1.45.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.6 // indirect
-	golang.org/x/crypto v0.41.0 // indirect
+	golang.org/x/crypto v0.59.0 // indirect
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
-	golang.org/x/net v0.43.0 // indirect
-	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/term v0.34.0 // indirect
-	golang.org/x/text v0.28.0 // indirect
+	golang.org/x/net v0.63.0 // indirect
+	golang.org/x/sync v0.25.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
+	golang.org/x/term v0.48.0 // indirect
+	golang.org/x/text v0.44.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.66.3 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
