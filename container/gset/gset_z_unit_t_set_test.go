@@ -331,6 +331,51 @@ func TestTSet_Intersect(t *testing.T) {
 	})
 }
 
+func TestTSet_Diff_MultipleSets(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			s1 = gset.NewTSetFrom[int]([]int{1, 2, 3})
+			s2 = gset.NewTSetFrom[int]([]int{1})
+			s3 = gset.NewTSetFrom[int]([]int{2})
+		)
+		// The items of every given set are removed, not only those of the last one.
+		s := s1.Diff(s2, s3)
+		t.Assert(s.Size(), 1)
+		t.Assert(s.Contains(1), false)
+		t.Assert(s.Contains(2), false)
+		t.Assert(s.Contains(3), true)
+		// The same result in any order of the given sets.
+		s = s1.Diff(s3, nil, s2)
+		t.Assert(s.Size(), 1)
+		t.Assert(s.Contains(3), true)
+		// The source set is not changed.
+		t.Assert(s1.Size(), 3)
+	})
+}
+
+func TestTSet_Intersect_MultipleSets(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			s1 = gset.NewTSetFrom[int]([]int{1, 2, 3})
+			s2 = gset.NewTSetFrom[int]([]int{1, 3})
+			s3 = gset.NewTSetFrom[int]([]int{2, 3})
+		)
+		// Only the items that are in every given set are kept.
+		s := s1.Intersect(s2, s3)
+		t.Assert(s.Size(), 1)
+		t.Assert(s.Contains(3), true)
+		// The set itself as one of the given sets changes nothing.
+		s = s1.Intersect(s2, s1, nil, s3)
+		t.Assert(s.Size(), 1)
+		t.Assert(s.Contains(3), true)
+		// No common item at all.
+		s = s1.Intersect(gset.NewTSetFrom[int]([]int{1}), gset.NewTSetFrom[int]([]int{2}))
+		t.Assert(s.Size(), 0)
+		// The source set is not changed.
+		t.Assert(s1.Size(), 3)
+	})
+}
+
 func TestTSet_Complement(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewTSetFrom[int]([]int{1, 2, 3})

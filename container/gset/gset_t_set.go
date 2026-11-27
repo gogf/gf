@@ -359,6 +359,8 @@ func (set *TSet[T]) Diff(others ...*TSet[T]) (newSet *TSet[T]) {
 	newSet = NewTSet[T]()
 	set.mu.RLock()
 	defer set.mu.RUnlock()
+	// It marks whether `newSet` has been filled from the first of `others`.
+	filled := false
 	for _, other := range others {
 		if other == nil {
 			continue
@@ -367,9 +369,18 @@ func (set *TSet[T]) Diff(others ...*TSet[T]) (newSet *TSet[T]) {
 			continue
 		}
 		other.mu.RLock()
-		for k, v := range set.data {
-			if _, ok := other.data[k]; !ok {
-				newSet.data[k] = v
+		if !filled {
+			filled = true
+			for k, v := range set.data {
+				if _, ok := other.data[k]; !ok {
+					newSet.data[k] = v
+				}
+			}
+		} else {
+			// The following sets can only remove items, or else the items
+			// removed by the previous sets would be added back.
+			for k := range other.data {
+				delete(newSet.data, k)
 			}
 		}
 		other.mu.RUnlock()
@@ -383,6 +394,8 @@ func (set *TSet[T]) Intersect(others ...*TSet[T]) (newSet *TSet[T]) {
 	newSet = NewTSet[T]()
 	set.mu.RLock()
 	defer set.mu.RUnlock()
+	// It marks whether `newSet` has been filled from the first of `others`.
+	filled := false
 	for _, other := range others {
 		if other == nil {
 			continue
@@ -390,9 +403,20 @@ func (set *TSet[T]) Intersect(others ...*TSet[T]) (newSet *TSet[T]) {
 		if set != other {
 			other.mu.RLock()
 		}
-		for k, v := range set.data {
-			if _, ok := other.data[k]; ok {
-				newSet.data[k] = v
+		if !filled {
+			filled = true
+			for k, v := range set.data {
+				if _, ok := other.data[k]; ok {
+					newSet.data[k] = v
+				}
+			}
+		} else {
+			// The following sets can only remove items, or else the result
+			// would be the union of the intersections with each set.
+			for k := range newSet.data {
+				if _, ok := other.data[k]; !ok {
+					delete(newSet.data, k)
+				}
 			}
 		}
 		if set != other {
