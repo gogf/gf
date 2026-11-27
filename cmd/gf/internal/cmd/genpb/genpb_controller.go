@@ -4,11 +4,20 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file generates controllers from protobuf gRPC server interfaces.
+
 package genpb
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"go/ast"
+	"go/format"
+	"go/parser"
+	"go/token"
+	"path"
+	"strconv"
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -34,12 +43,16 @@ type generateCtrl struct {
 	// resolved from the proto generated go files. It is empty when the output folder is
 	// not inside a go module.
 	ApiImportPath string
-	Methods       []generateCtrlMethod
+	// Imports contains packages referenced by streaming method signatures.
+	Imports []utils.ImportSpec
+	Methods []generateCtrlMethod
 }
 
 type generateCtrlMethod struct {
 	Name       string
 	Definition string
+	// Streaming indicates a method that returns only an error.
+	Streaming bool
 }
 
 const (
@@ -73,6 +86,12 @@ func (*Controller) {Definition} {
 	return nil, gerror.NewCode(gcode.CodeNotImplemented)
 }
 `
+	// controllerStreamMethodTemplate returns the single error required by streaming RPCs.
+	controllerStreamMethodTemplate = `
+func (*Controller) {Definition} {
+	return gerror.NewCode(gcode.CodeNotImplemented)
+}
+`
 )
 
 func (c CGenPb) generateController(ctx context.Context, in generateControllerInput) (err error) {
@@ -100,11 +119,53 @@ func (c CGenPb) parseControllers(filePath string) ([]generateCtrl, error) {
 	var (
 		controllers []generateCtrl
 		content     = gfile.GetContents(filePath)
+		parseErr    error
 	)
-	_, err := gregex.ReplaceStringFuncMatch(
+	file, err := parser.ParseFile(token.NewFileSet(), filePath, content, parser.ImportsOnly)
+	if err != nil {
+		return nil, err
+	}
+	// Reuse the generated protobuf file's aliases for external message and gRPC types.
+	var (
+		imports = make(map[string]utils.ImportSpec)
+		aliases = make(map[string]string)
+		// The controller also imports its API and framework packages, which may collide with protobuf aliases.
+		usedNames = map[string]string{
+			gfile.Basename(gfile.Dir(filePath)): utils.GetImportPath(gfile.Dir(filePath)),
+			"context":                           controllerContextImportPath,
+			"grpcx":                             controllerGrpcxImportPath,
+			"gcode":                             controllerGcodeImportPath,
+			"gerror":                            controllerGerrorImportPath,
+		}
+	)
+	for _, spec := range file.Imports {
+		importPath, err := strconv.Unquote(spec.Path.Value)
+		if err != nil {
+			return nil, err
+		}
+		name := path.Base(importPath)
+		if spec.Name != nil {
+			name = spec.Name.Name
+		}
+		alias := name
+		for suffix := 1; ; suffix++ {
+			if existing, ok := usedNames[alias]; !ok || existing == importPath {
+				break
+			}
+			alias = name + strconv.Itoa(suffix)
+		}
+		usedNames[alias] = importPath
+		aliases[name] = alias
+		imports[name] = utils.ImportSpec{Name: alias, Path: importPath}
+	}
+	_, err = gregex.ReplaceStringFuncMatch(
 		`type (\w+)Server interface {([\s\S]+?)}`,
 		content,
 		func(match []string) string {
+			// Legacy per-RPC stream interfaces are not services and have no registration function.
+			if parseErr != nil || gregex.IsMatchString(`(?m)^\s*grpc\.ServerStream\s*$`, match[2]) {
+				return match[0]
+			}
 			ctrl := generateCtrl{
 				Name:          match[1],
 				Package:       strings.ReplaceAll(gfile.Basename(gfile.Dir(gfile.Dir(filePath))), "-", "_"),
@@ -132,9 +193,23 @@ func (c CGenPb) parseControllers(filePath string) ([]generateCtrl, error) {
 						)
 					},
 				)
+				streaming := strings.HasSuffix(line, ") error")
+				if streaming {
+					var packages []string
+					line, packages, parseErr = controllerStreamingDefinition(line, ctrl.Version, aliases)
+					if parseErr != nil {
+						return match[0]
+					}
+					for _, name := range packages {
+						if spec, ok := imports[name]; ok {
+							ctrl.Imports = append(ctrl.Imports, spec)
+						}
+					}
+				}
 				ctrl.Methods = append(ctrl.Methods, generateCtrlMethod{
 					Name:       gstr.Split(line, "(")[0],
 					Definition: line,
+					Streaming:  streaming,
 				})
 			}
 			if len(ctrl.Methods) > 0 {
@@ -143,6 +218,9 @@ func (c CGenPb) parseControllers(filePath string) ([]generateCtrl, error) {
 			return match[0]
 		},
 	)
+	if parseErr != nil {
+		return nil, parseErr
+	}
 	return controllers, err
 }
 
@@ -200,7 +278,11 @@ func (c CGenPb) doGenerateController(in generateControllerInput, controller gene
 		if generatedContent != "" {
 			generatedContent += "\n"
 		}
-		generatedContent += gstr.ReplaceByMap(controllerMethodTemplate, g.MapStrStr{
+		methodTemplate := controllerMethodTemplate
+		if method.Streaming {
+			methodTemplate = controllerStreamMethodTemplate
+		}
+		generatedContent += gstr.ReplaceByMap(methodTemplate, g.MapStrStr{
 			"{Definition}": method.Definition,
 		})
 	}
@@ -251,8 +333,59 @@ func ensureControllerImports(filePath string, controller generateCtrl) error {
 		utils.ImportSpec{Path: controllerGcodeImportPath},
 		utils.ImportSpec{Path: controllerGerrorImportPath},
 	)
+	specs = append(specs, controller.Imports...)
 	if _, err := utils.EnsureImports(filePath, specs...); err != nil {
 		return gerror.Wrapf(err, `ensuring imports of controller file "%s" failed`, filePath)
 	}
 	return nil
+}
+
+// controllerStreamingDefinition qualifies local protobuf types and preserves imported selectors.
+func controllerStreamingDefinition(line, version string, aliases map[string]string) (string, []string, error) {
+	expression, err := parser.ParseExpr("interface { " + line + " }")
+	if err != nil {
+		return "", nil, err
+	}
+	var (
+		method    = expression.(*ast.InterfaceType).Methods.List[0]
+		signature = method.Type.(*ast.FuncType)
+		packages  []string
+		buffer    bytes.Buffer
+	)
+	for _, parameter := range signature.Params.List {
+		// Imported message types and grpc's generic stream types keep their original qualifiers.
+		ast.Inspect(parameter.Type, func(node ast.Node) bool {
+			if selector, ok := node.(*ast.SelectorExpr); ok {
+				if name, ok := selector.X.(*ast.Ident); ok {
+					packages = append(packages, name.Name)
+					if alias, ok := aliases[name.Name]; ok {
+						name.Name = alias
+					}
+				}
+			}
+			return true
+		})
+		parameter.Type = qualifyControllerStreamType(parameter.Type, version)
+	}
+	if err = format.Node(&buffer, token.NewFileSet(), signature); err != nil {
+		return "", nil, err
+	}
+	return method.Names[0].Name + strings.TrimPrefix(buffer.String(), "func"), packages, nil
+}
+
+// qualifyControllerStreamType adds the API alias to local messages and legacy stream interfaces.
+func qualifyControllerStreamType(expression ast.Expr, version string) ast.Expr {
+	switch expression := expression.(type) {
+	case *ast.Ident:
+		return &ast.SelectorExpr{X: ast.NewIdent(version), Sel: expression}
+	case *ast.StarExpr:
+		expression.X = qualifyControllerStreamType(expression.X, version)
+	case *ast.IndexExpr:
+		expression.Index = qualifyControllerStreamType(expression.Index, version)
+	case *ast.IndexListExpr:
+		for i, index := range expression.Indices {
+			expression.Indices[i] = qualifyControllerStreamType(index, version)
+		}
+	}
+	return expression
 }
