@@ -2,7 +2,7 @@ module github.com/gogf/gf/cmd/gf/cmd/gf/testdata/vardump/v2
 
 go 1.25.0
 
-require github.com/gogf/gf/v2 v2.10.5
+require github.com/gogf/gf/v2 v2.10.6
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
