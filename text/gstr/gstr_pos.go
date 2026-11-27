@@ -6,7 +6,78 @@
 
 package gstr
 
-import "strings"
+import (
+	"strings"
+	"unicode"
+	"unicode/utf8"
+)
+
+// toLowerOffsets converts `s` to lower case like strings.ToLower, but it keeps an invalid UTF-8 byte as it is.
+// The lower case of a rune can have another byte length, for example "İ", so `offsets` gives for each byte
+// of `lower` the offset in `s` of the rune it comes from, followed by len(s).
+// `offsets` is nil if `s` is ASCII, as then each byte of `lower` is at the same offset in `s`.
+func toLowerOffsets(s string) (lower string, offsets []int) {
+	ascii := true
+	for i := 0; i < len(s); i++ {
+		if s[i] >= utf8.RuneSelf {
+			ascii = false
+			break
+		}
+	}
+	if ascii {
+		return strings.ToLower(s), nil
+	}
+	buf := make([]byte, 0, len(s))
+	offsets = make([]int, 0, len(s))
+	for i := 0; i < len(s); {
+		r, size := utf8.DecodeRuneInString(s[i:])
+		n := len(buf)
+		if r == utf8.RuneError && size == 1 {
+			buf = append(buf, s[i])
+		} else {
+			buf = utf8.AppendRune(buf, unicode.ToLower(r))
+		}
+		for ; n < len(buf); n++ {
+			offsets = append(offsets, i)
+		}
+		i += size
+	}
+	return string(buf), append(offsets, len(s))
+}
+
+// indexFold returns the byte range in `s` of the first occurrence of `search`, or of the last one
+// if `last` is true, case-insensitively. It returns -1, -1 if `search` is not found.
+// The range can be shorter or longer than `search`, as "İ" takes two bytes and its lower case "i" one.
+func indexFold(s, search string, last bool) (start, end int) {
+	lower, offsets := toLowerOffsets(s)
+	searchLower, _ := toLowerOffsets(search)
+	if searchLower == "" {
+		if last {
+			return len(s), len(s)
+		}
+		return 0, 0
+	}
+	for from, to := 0, len(lower); ; {
+		var pos int
+		if last {
+			pos = strings.LastIndex(lower[:to], searchLower)
+		} else if pos = strings.Index(lower[from:], searchLower); pos != -1 {
+			pos += from
+		}
+		if pos == -1 {
+			return -1, -1
+		}
+		end = pos + len(searchLower)
+		if offsets == nil {
+			return pos, end
+		}
+		// A match that starts or ends inside a rune of `s` is not a match.
+		if (pos == 0 || offsets[pos] != offsets[pos-1]) && offsets[end] != offsets[end-1] {
+			return offsets[pos], offsets[end]
+		}
+		from, to = pos+1, end-1
+	}
+}
 
 // Pos returns the position of the first occurrence of `needle`
 // in `haystack` from `startOffset`, case-sensitively.
@@ -55,7 +126,7 @@ func PosI(haystack, needle string, startOffset ...int) int {
 	if offset < 0 {
 		offset += length
 	}
-	pos := strings.Index(strings.ToLower(haystack[offset:]), strings.ToLower(needle))
+	pos, _ := indexFold(haystack[offset:], needle, false)
 	if pos == -1 {
 		return -1
 	}
@@ -123,7 +194,7 @@ func PosRI(haystack, needle string, startOffset ...int) int {
 	} else {
 		haystack = haystack[offset:]
 	}
-	pos = strings.LastIndex(strings.ToLower(haystack), strings.ToLower(needle))
+	pos, _ = indexFold(haystack, needle, true)
 	if offset > 0 && pos != -1 {
 		pos += offset
 	}

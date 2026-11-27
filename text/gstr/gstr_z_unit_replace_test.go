@@ -11,6 +11,7 @@ package gstr_test
 import (
 	"strings"
 	"testing"
+	"unsafe"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -45,6 +46,37 @@ func Test_ReplaceI_EmptySearch(t *testing.T) {
 		t.Assert(gstr.ReplaceI("", "", "x"), "")
 		t.Assert(gstr.ReplaceIByArray("abc", g.ArrayStr{"", "x", "B", "-"}), "a-c")
 		t.Assert(gstr.ReplaceIByMap("abc", g.MapStrStr{"": "x"}), "abc")
+	})
+}
+
+// The lower case of "İ", of the Kelvin sign "K" and of an invalid byte has another byte length.
+func Test_ReplaceI_LowerCaseSize(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.ReplaceI("İstanbul abc", "ABC", "x"), "İstanbul x")
+		t.Assert(gstr.ReplaceI("İabc İabc", "ABC", "x"), "İx İx")
+		t.Assert(gstr.ReplaceI("\xffabc", "ABC", "x"), "\xffx")
+		t.Assert(gstr.ReplaceI("İstanbul", "İSTANBUL", "x"), "x")
+		t.Assert(gstr.ReplaceI("abk", "K", "x"), "abx")
+		t.Assert(gstr.ReplaceI("abK", "k", "x"), "abx")
+		// The match is replaced as a whole, even if it is longer or shorter than the search string.
+		t.Assert(gstr.ReplaceI("İstanbul İstanbul", "istanbul", "x"), "x x")
+		t.Assert(gstr.ReplaceI("istanbul istanbul", "İstanbul", "x"), "x x")
+		t.Assert(gstr.ReplaceI("İstanbul İstanbul", "istanbul", "x", 1), "x İstanbul")
+		t.Assert(gstr.ReplaceI("Ångström Ωmega", "å", "x"), "xngström Ωmega")
+		t.Assert(gstr.ReplaceI("Ångström Ωmega", "ω", "x"), "Ångström xmega")
+		// The origin string is returned as it is, not a copy of it, if nothing is replaced.
+		origin := strings.Repeat("İstanbul", 2)
+		result := gstr.ReplaceI(origin, "abc", "x")
+		t.Assert(unsafe.StringData(result) == unsafe.StringData(origin), true)
+		t.Assert(gstr.ReplaceIFunc("aİb İ", "i", func(s string) string {
+			return "[" + s + "]"
+		}), "a[İ]b [İ]")
+		t.Assert(gstr.ReplaceIFunc("ab", "İİİ", func(s string) string {
+			return "[" + s + "]"
+		}), "ab")
+		t.Assert(gstr.ReplaceIFunc("İİabc", "ABC", func(s string) string {
+			return "[" + s + "]"
+		}), "İİ[abc]")
 	})
 }
 
