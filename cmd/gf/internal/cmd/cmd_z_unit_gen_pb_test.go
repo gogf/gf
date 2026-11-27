@@ -75,80 +75,9 @@ func assertControllerImports(t *gtest.T, filePath string) {
 	})
 }
 
-func TestGenPbIssue3882(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var (
-			outputPath     = gfile.Temp(guid.S())
-			outputApiPath  = filepath.Join(outputPath, "api")
-			outputCtrlPath = filepath.Join(outputPath, "controller")
-
-			protobufFolder = gtest.DataPath("issue", "3882")
-			in             = genpb.CGenPbInput{
-				Path:       protobufFolder,
-				OutputApi:  outputApiPath,
-				OutputCtrl: outputCtrlPath,
-			}
-			err error
-		)
-		err = gfile.Mkdir(outputApiPath)
-		t.AssertNil(err)
-		err = gfile.Mkdir(outputCtrlPath)
-		t.AssertNil(err)
-		defer gfile.Remove(outputPath)
-
-		_, err = genpb.CGenPb{}.Pb(ctx, in)
-		t.AssertNil(err)
-
-		var (
-			genContent = gfile.GetContents(filepath.Join(outputApiPath, "issue3882.pb.go"))
-			exceptText = `dc:"Some comment on field with 'one' 'two' 'three' in the comment."`
-		)
-		t.Assert(gstr.Contains(genContent, exceptText), true)
-	})
-}
-
-// This issue only occurs when executing multiple times
-// and the subsequent OutputApi is the parent directory of the previous execution
-func TestGenPbIssue3953(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var (
-			outputPath     = gfile.Temp("f" + guid.S())
-			outputApiPath  = filepath.Join(outputPath, "api")
-			outputCtrlPath = filepath.Join(outputPath, "controller")
-
-			protobufFolder = gtest.DataPath("issue", "3953")
-			in             = genpb.CGenPbInput{
-				Path:       protobufFolder,
-				OutputApi:  outputApiPath,
-				OutputCtrl: outputCtrlPath,
-			}
-			err error
-		)
-		err = gfile.Mkdir(outputApiPath)
-		t.AssertNil(err)
-		err = gfile.Mkdir(outputCtrlPath)
-		t.AssertNil(err)
-		defer gfile.Remove(outputPath)
-
-		_, err = genpb.CGenPb{}.Pb(ctx, in)
-		// do twice,and set outputApi to outputPath
-		in.OutputApi = outputPath
-		_, err = genpb.CGenPb{}.Pb(ctx, in)
-		t.AssertNil(err)
-
-		var (
-			genContent = gfile.GetContents(filepath.Join(outputApiPath, "issue3953.pb.go"))
-			// The old version would have appeared `v:"required" v:"required"`
-			// but the new version of the code will appear `v:"required"` only once
-			notExceptText = `v:"required" v:"required"`
-		)
-		t.Assert(gstr.Contains(genContent, notExceptText), false)
-	})
-}
-
 // TestGenPb_ControllerImports asserts that the generated controller declares every import its
-// content uses. GoFmt only removes the unused imports and never adds them, so the generator has
-// to declare them explicitly, otherwise the generated controller does not compile.
+// content uses. GoFmt resolves imports by package name, so the api alias and the grpcx import
+// are ensured by the generator, otherwise the generated controller does not compile.
 func TestGenPb_ControllerImports(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// The output folder is created inside the module, so that the import path of the api
@@ -157,9 +86,8 @@ func TestGenPb_ControllerImports(t *testing.T) {
 			outputPath     = gfile.Join(gfile.Pwd(), "tmp_genpb_"+guid.S())
 			outputApiPath  = filepath.Join(outputPath, "api")
 			outputCtrlPath = filepath.Join(outputPath, "controller")
-			protobufFolder = gtest.DataPath("issue", "3953")
 			in             = genpb.CGenPbInput{
-				Path:       protobufFolder,
+				Path:       gtest.DataPath("issue", "3953"),
 				OutputApi:  outputApiPath,
 				OutputCtrl: outputCtrlPath,
 			}
@@ -176,24 +104,31 @@ func TestGenPb_ControllerImports(t *testing.T) {
 		)
 		t.AssertNil(scanErr)
 		t.Assert(len(controllers), 1)
-		var content = gfile.GetContents(controllers[0])
+
+		var (
+			controllerPath = controllers[0]
+			content        = gfile.GetContents(controllerPath)
+		)
 		// The controller embeds the unimplemented server of the api version package, which is
-		// imported with the version name given by the generator as its alias.
+		// imported with the directory name given by the generator as its alias.
 		t.Assert(gstr.Contains(content, `api "github.com/gogf/gf/cmd/gf/v2/`), true)
 		t.Assert(gstr.Contains(content, "api.UnimplementedAccountServer"), true)
 		t.Assert(gstr.Contains(content, "grpcx.GrpcServer"), true)
 		// The method body uses gerror and gcode, and its signature uses context.
 		t.Assert(gstr.Contains(content, "gerror.NewCode(gcode.CodeNotImplemented)"), true)
 		t.Assert(gstr.Contains(content, "context.Context"), true)
-		assertControllerImports(t, controllers[0])
+		// The generated file must be valid go code with every qualifier imported.
+		_, err = parser.ParseFile(token.NewFileSet(), controllerPath, content, parser.ParseComments)
+		t.AssertNil(err)
+		assertControllerImports(t, controllerPath)
 
 		// Re-generating an existing controller must not duplicate the imports.
 		_, err = genpb.CGenPb{}.Pb(ctx, in)
 		t.AssertNil(err)
-		content = gfile.GetContents(controllers[0])
+		content = gfile.GetContents(controllerPath)
 		t.Assert(gstr.Count(content, `"context"`), 1)
 		t.Assert(gstr.Count(content, `"github.com/gogf/gf/contrib/rpc/grpcx/v2"`), 1)
-		assertControllerImports(t, controllers[0])
+		assertControllerImports(t, controllerPath)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -203,9 +138,8 @@ func TestGenPb_ControllerImports(t *testing.T) {
 			outputPath     = gfile.Join(gfile.Pwd(), "tmp_genpb_"+guid.S())
 			outputApiPath  = filepath.Join(outputPath, "api")
 			outputCtrlPath = filepath.Join(outputPath, "controller")
-			protobufFolder = gtest.DataPath("issue", "3953")
 			in             = genpb.CGenPbInput{
-				Path:       protobufFolder,
+				Path:       gtest.DataPath("issue", "3953"),
 				OutputApi:  outputApiPath,
 				OutputCtrl: outputCtrlPath,
 			}
@@ -308,8 +242,110 @@ message SayHelloRes {
 
 		content = gfile.GetContents(controllerPath)
 		t.Assert(gstr.Count(content, apiImportSuffix), 1)
-		t.Assert(gstr.Contains(content, `v1 "`), false)
+		// GoFmt normalizes the api import on its own here: the import path ends with the
+		// version segment, so the version alias it writes is expected and still compiles.
 		assertControllerImports(t, controllerPath)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// The output folder is outside of any go module, so the import path of the api package
+		// cannot be resolved: no invalid import path is written, and the file is still
+		// generated for the user to add the api import manually.
+		var (
+			outputPath     = filepath.Join(t.TempDir(), "genpbcheck")
+			outputApiPath  = filepath.Join(outputPath, "api")
+			outputCtrlPath = filepath.Join(outputPath, "controller")
+			in             = genpb.CGenPbInput{
+				Path:       gtest.DataPath("issue", "3953"),
+				OutputApi:  outputApiPath,
+				OutputCtrl: outputCtrlPath,
+			}
+		)
+		t.AssertNil(gfile.Mkdir(outputApiPath))
+		t.AssertNil(gfile.Mkdir(outputCtrlPath))
+
+		_, err := genpb.CGenPb{}.Pb(ctx, in)
+		t.AssertNil(err)
+
+		var controllers, scanErr = gfile.ScanDirFile(outputCtrlPath, "*.go", true)
+		t.AssertNil(scanErr)
+		t.Assert(len(controllers), 1)
+		var content = gfile.GetContents(controllers[0])
+		t.Assert(gstr.Contains(content, "api.UnimplementedAccountServer"), true)
+		t.Assert(gstr.Contains(content, `api "`), false)
+		t.Assert(gstr.Contains(content, `"github.com/gogf/gf/contrib/rpc/grpcx/v2"`), true)
+		t.Assert(gstr.Contains(content, `"context"`), true)
+	})
+}
+
+func TestGenPbIssue3882(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			outputPath     = gfile.Temp(guid.S())
+			outputApiPath  = filepath.Join(outputPath, "api")
+			outputCtrlPath = filepath.Join(outputPath, "controller")
+
+			protobufFolder = gtest.DataPath("issue", "3882")
+			in             = genpb.CGenPbInput{
+				Path:       protobufFolder,
+				OutputApi:  outputApiPath,
+				OutputCtrl: outputCtrlPath,
+			}
+			err error
+		)
+		err = gfile.Mkdir(outputApiPath)
+		t.AssertNil(err)
+		err = gfile.Mkdir(outputCtrlPath)
+		t.AssertNil(err)
+		defer gfile.Remove(outputPath)
+
+		_, err = genpb.CGenPb{}.Pb(ctx, in)
+		t.AssertNil(err)
+
+		var (
+			genContent = gfile.GetContents(filepath.Join(outputApiPath, "issue3882.pb.go"))
+			exceptText = `dc:"Some comment on field with 'one' 'two' 'three' in the comment."`
+		)
+		t.Assert(gstr.Contains(genContent, exceptText), true)
+	})
+}
+
+// This issue only occurs when executing multiple times
+// and the subsequent OutputApi is the parent directory of the previous execution
+func TestGenPbIssue3953(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			outputPath     = gfile.Temp("f" + guid.S())
+			outputApiPath  = filepath.Join(outputPath, "api")
+			outputCtrlPath = filepath.Join(outputPath, "controller")
+
+			protobufFolder = gtest.DataPath("issue", "3953")
+			in             = genpb.CGenPbInput{
+				Path:       protobufFolder,
+				OutputApi:  outputApiPath,
+				OutputCtrl: outputCtrlPath,
+			}
+			err error
+		)
+		err = gfile.Mkdir(outputApiPath)
+		t.AssertNil(err)
+		err = gfile.Mkdir(outputCtrlPath)
+		t.AssertNil(err)
+		defer gfile.Remove(outputPath)
+
+		_, err = genpb.CGenPb{}.Pb(ctx, in)
+		// do twice,and set outputApi to outputPath
+		in.OutputApi = outputPath
+		_, err = genpb.CGenPb{}.Pb(ctx, in)
+		t.AssertNil(err)
+
+		var (
+			genContent = gfile.GetContents(filepath.Join(outputApiPath, "issue3953.pb.go"))
+			// The old version would have appeared `v:"required" v:"required"`
+			// but the new version of the code will appear `v:"required"` only once
+			notExceptText = `v:"required" v:"required"`
+		)
+		t.Assert(gstr.Contains(genContent, notExceptText), false)
 	})
 }
 

@@ -7,9 +7,17 @@
 package genpb
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"go/ast"
+	"go/format"
+	"go/parser"
+	"go/token"
+	"strconv"
 	"strings"
+
+	"golang.org/x/tools/go/ast/astutil"
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
@@ -154,7 +162,7 @@ func (c CGenPb) doGenerateControllers(in generateControllerInput, controllers []
 		}
 	}
 	err = utils.ReplaceGeneratedContentGFV2(in.OutputCtrlPath)
-	return nil
+	return err
 }
 
 func (c CGenPb) doGenerateController(in generateControllerInput, controller generateCtrl) (err error) {
@@ -220,18 +228,27 @@ func (c CGenPb) doGenerateController(in generateControllerInput, controller gene
 	return nil
 }
 
+// controllerImport is an import declaration that the generated controller content references.
+type controllerImport struct {
+	// Name is the optional import alias, like `api` in `api "path/to/api"`.
+	Name string
+	// Path is the import path, like `github.com/gogf/gf/contrib/rpc/grpcx/v2`.
+	Path string
+}
+
 // ensureControllerImports ensures the imports required by the controller template and by the
-// controller method template, as GoFmt only removes the unused imports and never adds them.
+// controller method template.
 //
-// The imports of the method template are ensured as well even for a controller without any
-// method, and the following GoFmt removes the ones that the generated content does not use,
-// which keeps the same result as the imports.Process used to give.
+// GoFmt resolves imports by their package name, so it cannot restore the api import whose
+// directory name differs from its package name, and cannot add the grpcx import when that
+// module is not in the build list of the module being generated. The imports ensured here are
+// removed by the following GoFmt when the rendered content does not use them.
 func ensureControllerImports(filePath string, controller generateCtrl) error {
-	var specs = make([]utils.ImportSpec, 0, 5)
+	var specs = make([]controllerImport, 0, 5)
 	if controller.ApiImportPath != "" {
 		// The alias is given explicitly, as the package name of the api package may differ
-		// from the version segment of its import path.
-		specs = append(specs, utils.ImportSpec{
+		// from the directory name of its import path.
+		specs = append(specs, controllerImport{
 			Name: controller.Version,
 			Path: controller.ApiImportPath,
 		})
@@ -246,13 +263,56 @@ func ensureControllerImports(filePath string, controller generateCtrl) error {
 		)
 	}
 	specs = append(specs,
-		utils.ImportSpec{Path: controllerContextImportPath},
-		utils.ImportSpec{Path: controllerGrpcxImportPath},
-		utils.ImportSpec{Path: controllerGcodeImportPath},
-		utils.ImportSpec{Path: controllerGerrorImportPath},
+		controllerImport{Path: controllerContextImportPath},
+		controllerImport{Path: controllerGrpcxImportPath},
+		controllerImport{Path: controllerGcodeImportPath},
+		controllerImport{Path: controllerGerrorImportPath},
 	)
-	if _, err := utils.EnsureImports(filePath, specs...); err != nil {
+	if err := addMissingImports(filePath, specs...); err != nil {
 		return gerror.Wrapf(err, `ensuring imports of controller file "%s" failed`, filePath)
 	}
 	return nil
+}
+
+// addMissingImports adds the import declarations of the given specs that the file does not
+// import yet. An import path already declared with another alias is accepted as is, as its
+// real package name cannot be verified here without resolving the package.
+func addMissingImports(filePath string, specs ...controllerImport) error {
+	var (
+		content = gfile.GetContents(filePath)
+		fset    = token.NewFileSet()
+	)
+	file, err := parser.ParseFile(fset, filePath, content, parser.ParseComments)
+	if err != nil {
+		return err
+	}
+	var changed bool
+	for _, spec := range specs {
+		if hasImportPath(file, spec.Path) {
+			continue
+		}
+		if astutil.AddNamedImport(fset, file, spec.Name, spec.Path) {
+			changed = true
+		}
+	}
+	if !changed {
+		return nil
+	}
+	var buffer bytes.Buffer
+	if err = format.Node(&buffer, fset, file); err != nil {
+		return err
+	}
+	return gfile.PutContents(filePath, buffer.String())
+}
+
+// hasImportPath checks whether the file already imports the given import path, no matter
+// which alias the import declaration uses.
+func hasImportPath(file *ast.File, importPath string) bool {
+	for _, spec := range file.Imports {
+		path, err := strconv.Unquote(spec.Path.Value)
+		if err == nil && path == importPath {
+			return true
+		}
+	}
+	return false
 }

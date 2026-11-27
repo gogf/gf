@@ -171,11 +171,11 @@ func Test_Gen_Dao_Sharding(t *testing.T) {
 		t.Assert(gstr.Contains(daoUsersContent, "m.Sharding(gdb.ShardingConfig{"), true)
 		t.Assert(gstr.Contains(daoOrdersContent, "Orders = ordersDao{internal.NewOrdersDao(ordersShardingHandler)}"), true)
 		t.Assert(gstr.Contains(daoOrdersContent, "m.Sharding(gdb.ShardingConfig{"), true)
-		// The gdb import comes from the dao index template, and it is kept as long as the
-		// sharding handler references it, otherwise the generated file does not compile.
+		// GoFmt adds the missing imports, so the sharding handler compiles without the dao
+		// index template declaring the gdb import.
 		t.Assert(gstr.Contains(daoUsersContent, `"github.com/gogf/gf/v2/database/gdb"`), true)
 		t.Assert(gstr.Contains(daoOrdersContent, `"github.com/gogf/gf/v2/database/gdb"`), true)
-		// The non-sharding file does not reference gdb, so the unused import is dropped.
+		// The non-sharding file does not reference gdb, so the import is never added.
 		t.Assert(gstr.Contains(daoSingleTableContent, "database/gdb"), false)
 	})
 }

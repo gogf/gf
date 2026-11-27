@@ -115,8 +115,10 @@ jobs:
             ;;
           core)
             # `cmd/gf` belongs to this group and its tests hit real mysql, mariadb and
-            # postgres instances on every Go version, while the contrib backends below
-            # are only exercised on the latest one (see ci-main.sh).
+            # postgres instances. It requires go 1.26, so it is skipped on the older
+            # matrix entries (see ci-main.sh), but the services are cheap to start and
+            # keep the step free of version assumptions. The contrib backends below are
+            # only exercised on the latest one.
             services="mysql mariadb postgres"
             if [ "${{ matrix.go-version }}" = "$LATEST_GO_VERSION" ]; then
               services="mysql mariadb postgres etcd redis polaris zookeeper"
