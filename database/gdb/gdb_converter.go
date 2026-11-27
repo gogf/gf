@@ -45,11 +45,14 @@ func GetConverter() gconv.Converter {
 }
 
 func sliceTypeConverterFunc(from any, to reflect.Value) (err error) {
-	v, ok := from.(iVal)
-	if !ok {
+	fromVal := from
+	if v, ok := from.(iVal); ok {
+		fromVal = v.Val()
+	}
+	if fromVal == nil {
+		to.Set(reflect.Zero(to.Type()))
 		return nil
 	}
-	fromVal := v.Val()
 	switch x := fromVal.(type) {
 	case []byte:
 		dst := to.Addr().Interface()
@@ -60,7 +63,7 @@ func sliceTypeConverterFunc(from any, to reflect.Value) (err error) {
 	default:
 		fromType := reflect.TypeOf(fromVal)
 		switch fromType.Kind() {
-		case reflect.Slice:
+		case reflect.Slice, reflect.Array:
 			convertOption := gconv.ConvertOption{
 				SliceOption:  gconv.SliceOption{ContinueOnError: true},
 				MapOption:    gconv.MapOption{ContinueOnError: true},
