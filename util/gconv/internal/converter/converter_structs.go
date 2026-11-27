@@ -11,6 +11,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/reflection"
 )
 
 // StructsOption is the option for Structs function.
@@ -101,7 +102,15 @@ func (c *Converter) Structs(params any, pointer any, option ...StructsOption) (e
 	)
 	if itemTypeKind == reflect.Pointer {
 		// Pointer element.
+		// A nil source value for a pointer to a basic type yields a nil element, so that
+		// scanning a NULL column into []*T keeps nil pointers instead of pointers to the
+		// zero value. This matches scanning the same NULL into a single *T target.
+		isBasicElem := reflection.IsBasicKind(itemType.Elem().Kind())
 		for i := 0; i < len(paramsList); i++ {
+			if isBasicElem && paramsList[i] == nil {
+				// reflect.MakeSlice already left this element as a nil pointer.
+				continue
+			}
 			var tempReflectValue reflect.Value
 			if i < pointerRvLength {
 				// Might be nil.

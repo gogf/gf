@@ -67,3 +67,29 @@ func Test_OriginTypeAndKind(t *testing.T) {
 		t.Assert(out.OriginKind, reflect.Slice)
 	})
 }
+
+func Test_IsBasicKind(t *testing.T) {
+	// All basic kinds should return true.
+	basicKinds := []reflect.Kind{
+		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64,
+		reflect.Bool, reflect.String,
+	}
+	for _, kind := range basicKinds {
+		gtest.C(t, func(t *gtest.T) {
+			t.Assert(reflection.IsBasicKind(kind), true)
+		})
+	}
+	// Non-basic kinds should return false.
+	nonBasicKinds := []reflect.Kind{
+		reflect.Array, reflect.Slice, reflect.Map, reflect.Struct,
+		reflect.Pointer, reflect.Interface, reflect.Chan, reflect.Func,
+		reflect.Complex64, reflect.Complex128, reflect.Uintptr,
+	}
+	for _, kind := range nonBasicKinds {
+		gtest.C(t, func(t *gtest.T) {
+			t.Assert(reflection.IsBasicKind(kind), false)
+		})
+	}
+}

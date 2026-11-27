@@ -284,3 +284,48 @@ func TestScanPointerElementSlice(t *testing.T) {
 		}
 	})
 }
+
+// TestScanPointerElementSliceWithNil tests that a nil source element scanned into a
+// slice of pointers to basic types yields a nil pointer element, so that a NULL column
+// value stays distinguishable from a zero value.
+func TestScanPointerElementSliceWithNil(t *testing.T) {
+	// []any{nil, "b"} -> []*string
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = []any{nil, "b"}
+			dst []*string
+		)
+		err := gconv.Scan(src, &dst)
+		t.AssertNil(err)
+		t.Assert(len(dst), 2)
+		t.AssertNil(dst[0])
+		t.AssertNE(dst[1], nil)
+		t.Assert(*dst[1], "b")
+	})
+	// []any{nil, 2} -> []*int
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = []any{nil, 2}
+			dst []*int
+		)
+		err := gconv.Scan(src, &dst)
+		t.AssertNil(err)
+		t.Assert(len(dst), 2)
+		t.AssertNil(dst[0])
+		t.AssertNE(dst[1], nil)
+		t.Assert(*dst[1], 2)
+	})
+	// gconv.Structs keeps nil elements for pointer to basic type slices.
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = []any{nil, "b"}
+			dst []*string
+		)
+		err := gconv.Structs(src, &dst)
+		t.AssertNil(err)
+		t.Assert(len(dst), 2)
+		t.AssertNil(dst[0])
+		t.AssertNE(dst[1], nil)
+		t.Assert(*dst[1], "b")
+	})
+}
