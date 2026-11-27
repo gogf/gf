@@ -568,15 +568,15 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 				)
 				for i := 0; i < reflectValue.Len(); i++ {
 					converted = false
-					elemTypeName = elemType.Name()
-					if elemTypeName == "" || elemType == rawMessageType {
-						elemTypeName = elemType.String()
-					}
 					var elem reflect.Value
 					if elemType.Kind() == reflect.Pointer {
 						elem = reflect.New(elemType.Elem()).Elem()
 					} else {
 						elem = reflect.New(elemType).Elem()
+					}
+					elemTypeName = elem.Type().Name()
+					if elemTypeName == "" || elem.Type() == rawMessageType {
+						elemTypeName = elem.Type().String()
 					}
 					if elem.Kind() == reflect.Struct {
 						if err = c.Struct(reflectValue.Index(i).Interface(), elem, option); err == nil {
@@ -607,7 +607,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 			var (
 				elem         reflect.Value
 				elemType     = structFieldValue.Type().Elem()
-				elemTypeName = elemType.Name()
+				elemTypeName string
 				converted    bool
 			)
 			switch reflectValue.Kind() {
@@ -628,13 +628,14 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 				}
 			default:
 			}
-			if elemTypeName == "" || elemType == rawMessageType {
-				elemTypeName = elemType.String()
-			}
 			if elemType.Kind() == reflect.Pointer {
 				elem = reflect.New(elemType.Elem()).Elem()
 			} else {
 				elem = reflect.New(elemType).Elem()
+			}
+			elemTypeName = elem.Type().Name()
+			if elemTypeName == "" || elem.Type() == rawMessageType {
+				elemTypeName = elem.Type().String()
 			}
 			if elem.Kind() == reflect.Struct {
 				if err = c.Struct(value, elem, option); err == nil {
