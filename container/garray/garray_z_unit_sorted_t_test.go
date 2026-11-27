@@ -342,6 +342,50 @@ func TestSortedTArray_Clone(t *testing.T) {
 	})
 }
 
+// The copy of a unique array must stay unique.
+func TestSortedTArray_Clone_KeepsUnique(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array1 := garray.NewSortedTArray[int](gutil.ComparatorT).SetUnique(true)
+		array1.Add(1, 2, 2, 3)
+		t.Assert(array1.Slice(), []int{1, 2, 3})
+
+		array2 := array1.Clone()
+		array2.Add(2, 3, 4)
+		t.Assert(array2.Slice(), []int{1, 2, 3, 4})
+
+		array3 := array1.DeepCopy().(*garray.SortedTArray[int])
+		array3.Add(2, 3, 4)
+		t.Assert(array3.Slice(), []int{1, 2, 3, 4})
+	})
+	// The wrapping types use the same Clone.
+	gtest.C(t, func(t *gtest.T) {
+		array1 := garray.NewSortedIntArray().SetUnique(true)
+		array1.Add(1, 2, 2)
+		array2 := array1.Clone()
+		array2.Add(1, 2)
+		t.Assert(array2.Slice(), []int{1, 2})
+
+		array3 := garray.NewSortedStrArray().SetUnique(true)
+		array3.Add("a", "b", "b")
+		array4 := array3.Clone()
+		array4.Add("a", "b")
+		t.Assert(array4.Slice(), []string{"a", "b"})
+
+		array5 := garray.NewSortedArray(gutil.ComparatorInt).SetUnique(true)
+		array5.Add(1, 2, 2)
+		array6 := array5.Clone()
+		array6.Add(1, 2)
+		t.Assert(array6.Slice(), []any{1, 2})
+	})
+	// A not unique array stays not unique.
+	gtest.C(t, func(t *gtest.T) {
+		array1 := garray.NewSortedTArrayFrom([]int{1, 2}, gutil.ComparatorT)
+		array2 := array1.Clone()
+		array2.Add(2)
+		t.Assert(array2.Slice(), []int{1, 2, 2})
+	})
+}
+
 func TestSortedTArray_Clear(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"a", "d", "c", "b", "e", "f"}
