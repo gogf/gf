@@ -4,10 +4,13 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Request parameter retrieval and struct binding.
+
 package ghttp
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/net/goai"
@@ -229,6 +232,47 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 	}
 
 	return data, gconv.Struct(data, pointer, mapping...)
+}
+
+// mergeUploadFiles normalizes uploaded files to request field types before validation.
+func (r *Request) mergeUploadFiles(data map[string]any, pointer any) error {
+	if r.MultipartForm == nil || len(r.MultipartForm.File) == 0 {
+		return nil
+	}
+	fields, err := gstructs.Fields(gstructs.FieldsInput{
+		Pointer:         pointer,
+		RecursiveOption: gstructs.RecursiveOptionEmbedded,
+	})
+	if err != nil {
+		return err
+	}
+	for _, field := range fields {
+		fieldType := field.Field.Type
+		if fieldType.Kind() != reflect.Slice || fieldType.Elem() != reflect.TypeOf((*UploadFile)(nil)) {
+			continue
+		}
+		// Match exact tag and field names before the field-name fallback used by binding.
+		key := strings.TrimSpace(field.TagPriorityName())
+		value, ok := data[key]
+		if !ok {
+			key = field.Name()
+			value, ok = data[key]
+		}
+		if !ok {
+			key, value = gutil.MapPossibleItemByKey(data, field.Name())
+		}
+		var files UploadFiles
+		switch value := value.(type) {
+		case *UploadFile:
+			files = UploadFiles{value}
+		case UploadFiles:
+			files = value
+		default:
+			continue
+		}
+		data[key] = reflect.ValueOf(files).Convert(fieldType).Interface()
+	}
+	return nil
 }
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.

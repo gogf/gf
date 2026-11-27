@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Request body decoding, parameter binding and validation.
+
 package ghttp
 
 import (
@@ -198,6 +200,11 @@ func (r *Request) doParse(pointer any, requestType int, withValidation bool) err
 		// The validation rules here are all from struct tag, which are static,
 		// so the parsed rule value cache is enabled for performance.
 		if withValidation {
+			if requestType == parseTypeRequest {
+				if err = r.mergeUploadFiles(data, pointer); err != nil {
+					return err
+				}
+			}
 			if err = gvalid.New(true).
 				Bail().
 				Data(pointer).
