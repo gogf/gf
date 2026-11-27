@@ -218,32 +218,25 @@ grep -c "github.com/gogf/gf.*vX.Y.Z" cmd/gf/go.sum
 
 ### 9. 生成并整理 Release Notes
 
-Release 页面默认只有自动生成的原始变更列表，需要补一版可读的说明。这一步由技能执行者引导操作人员完成，不要自己直接改页面内容。
+Release 页面默认只有自动生成的原始变更列表，需要按统一格式整理成中英双语说明。可以让操作人员在页面点击`Generate release notes`后把正文贴回，也可以由技能执行者直接取同一份自动生成结果；必须以自动生成的真实内容为准，不要手写 PR 列表。
 
-1. 通知操作人员：等步骤 7 的`release.yml`完成后，打开`https://github.com/gogf/gf/releases/tag/vX.Y.Z`，点击编辑，在正文处点击`Generate release notes`（自动生成发布说明），确认对比范围是上一版本`v<上一版本>`到本次 tag。
-2. 请操作人员把生成出来的正文整段贴回对话。可用同样的数据源自检，但最终以页面生成的结果为准：
-
-```bash
-gh api repos/gogf/gf/releases/generate-notes -f tag_name=vX.Y.Z -f previous_tag_name=v<上一版本> --jq '.body'
-```
-
-3. 对贴回的内容做分类整理。不新增、不删除条目，不改写作者：
-   - `Features`：`feat`类型的 PR。
-   - `Bug Fixes`：`fix`类型的 PR，按组件分组（`net/ghttp`、`database/gdb`、`os/gtime`等），组件名写完整路径。
-   - `Performance`：`perf`类型。
-   - `Refactor`：`refactor`类型。
-   - `Docs` / `Tests`：`docs`、`test`类型，条目少时可以合并。
-   - `CI & Dependencies`：`ci`、`build`、`chore`类型，以及`fix: update gf cli to vX.Y.Z`这类机器人提交。
-   - 安全相关修复（路径穿越、越权读取、panic、数据竞争等）在条目中标注`Security`，不要漏。
-   - 每个条目保留`[#NNNN](链接)（@作者）`格式；同一组件内按 PR 号或重要性排序。
-4. 输出为纯 markdown，保持英文（与页面现有内容和历史 Release 一致），保留末尾的`**Full Changelog**`链接，删除模板残留与无关内容。
-5. 把整理结果交回操作人员，由其在页面替换正文后点击`Update release`；保存后核对：
+1. 获取自动生成的原文，同时请操作人员在`https://github.com/gogf/gf/releases/tag/vX.Y.Z`页面点击`Generate release notes`交叉核对：
 
 ```bash
-gh release view vX.Y.Z -R gogf/gf --json body --jq '.body' | head -40
+gh api repos/gogf/gf/releases/generate-notes -f tag_name=vX.Y.Z -f previous_tag_name=v<上一版本> --jq '.body' > /tmp/<版本>-notes.md
 ```
 
-只改正文，不要改 tag、附件和发布状态，不要删除自动生成的真实条目。
+2. 按提交类型重新分组，格式对齐`v2.10.4`（参考`https://github.com/gogf/gf/releases/tag/v2.10.4`）：`## What's Changed`下依次放`## feat`、`## fix`、`## perf`、`## refactor`、`## test`、`## docs`、`## ci`、`## chore`，只保留实际出现的类型；每条沿用自动生成的单行`* <type>(<scope>): <subject> by @<author> in <PR 链接>`，不新增、不删除条目、不改写作者；发版自身的`chore(release): bump version to vX.Y.Z`照参考版本保留在`## chore`。
+   组内排序：没有 scope 的条目（如`fix: update gf cli to vX.Y.Z`）排在该组最前，其余按 scope（包路径）字母序升序，同一个包的条目必须相邻，同包内按 PR 号升序。这样`encoding/gini`、`encoding/gjson`、`net/ghttp`、`os/gtime`等不会分散在列表各处。
+3. 同一份内容做成双语：英文块在前，末尾保留`**Full Changelog**`链接；用`---`分隔后写`# 更新说明`中文块，章节名用`## 新功能 feat`、`## 问题修复 fix`、`## 代码重构 refactor`、`## 测试 test`、`## 文档 docs`、`## CI`、`## 其他 chore`，每条只翻译描述，保留`类型(范围)：`前缀与`by @作者 in 链接`，末尾写`**完整变更**`链接。中英文条目数量必须一致。
+4. 写入并核对：
+
+```bash
+gh release edit vX.Y.Z -R gogf/gf --notes-file /tmp/<版本>-notes-bilingual.md
+gh release view vX.Y.Z -R gogf/gf --json body --jq '.body' | grep -E "^#|^\*\*"
+```
+
+核对点：英文与中文 bullet 数量相同；`Full Changelog`与`完整变更`都指向`compare/v<上一版本>...vX.Y.Z`；只改正文，不改 tag、附件和发布状态。
 
 ### 10. 同步站点发布文档（可选）
 
