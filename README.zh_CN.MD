@@ -163,7 +163,7 @@ cd hello && gf run main.go
 💖 [感谢所有使 GoFrame 成为可能的贡献者](https://github.com/gogf/gf/graphs/contributors) 💖
 
 <a href="https://github.com/gogf/gf/graphs/contributors">
-<img src="https://goframe.org/img/contributors.svg?version=v2.10.5" alt="goframe contributors"/>
+<img src="https://goframe.org/img/contributors.svg?version=v2.10.6" alt="goframe contributors"/>
 </a>
 
 ## 许可证
