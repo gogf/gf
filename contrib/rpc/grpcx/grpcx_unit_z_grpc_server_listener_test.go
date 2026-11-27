@@ -22,6 +22,10 @@ import (
 // Start runs the server asynchronously, and the listener is assigned by that goroutine. Reading
 // the port right after Start, as the tests and the users do, must be concurrency safe, or the
 // race detector reports a data race and the server may return a wrong port.
+//
+// The reader starts before Start, so its reads are never ordered after the listener assignment
+// by the goroutine creation: the race is reported deterministically on an unsynchronized
+// implementation instead of depending on the scheduling.
 func Test_Grpcx_Grpc_Server_GetListenedPort_Concurrent(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -30,19 +34,30 @@ func Test_Grpcx_Grpc_Server_GetListenedPort_Concurrent(t *testing.T) {
 		c.Name = guid.S()
 		c.Address = "127.0.0.1:0"
 		s := grpcx.Server.New(c)
-		s.Start()
-		defer s.Stop()
 
-		// Read the port concurrently with the asynchronous listener assignment. The port may
-		// be -1 before the server starts listening, which is expected and documented.
-		var done = make(chan struct{})
+		var (
+			stopRead   = make(chan struct{})
+			readerDone = make(chan struct{})
+		)
 		go func() {
-			defer close(done)
-			for i := 0; i < 1000; i++ {
-				s.GetListenedPort()
+			defer close(readerDone)
+			for {
+				select {
+				case <-stopRead:
+					return
+				default:
+					// The port may be -1 before the server starts listening, which is
+					// expected and documented.
+					s.GetListenedPort()
+				}
 			}
 		}()
-		<-done
+		s.Start()
+		defer func() {
+			close(stopRead)
+			<-readerDone
+			s.Stop()
+		}()
 
 		// Wait for the asynchronous start to complete before asserting the port.
 		for i := 0; i < 100 && s.GetListenedPort() <= 0; i++ {
