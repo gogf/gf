@@ -174,9 +174,31 @@ func Test_Model_Cache_Force(t *testing.T) {
 
 		_, err = db.Model(table).Data(g.Map{"passport": "updated"}).Where("id", 101).Update()
 		t.AssertNil(err)
+		// A named cache entry is not invalidated by writes, so Force still returns the cached value.
 		value, err = db.Model(table).Cache(valueOption).Where("id", 101).Value("passport")
 		t.AssertNil(err)
 		t.Assert(value.String(), "placeholder")
+
+		arrayOption := gdb.CacheOption{
+			Duration: time.Second * 10,
+			Name:     "test_cache_force_empty_array",
+			Force:    true,
+		}
+		// Oracle treats '' as NULL and rejects NOT NULL columns; use a non-empty placeholder.
+		_, err = db.Model(table).Data(g.Map{"id": 102, "passport": "placeholder", "password": "w", "nickname": "n", "create_time": "2018-10-24 10:00:00"}).InsertAndGetId()
+		t.AssertNil(err)
+		values, err := db.Model(table).Cache(arrayOption).Where("id", 102).Array("passport")
+		t.AssertNil(err)
+		t.Assert(len(values), 1)
+		t.Assert(values[0].String(), "placeholder")
+
+		_, err = db.Model(table).Data(g.Map{"passport": "updated"}).Where("id", 102).Update()
+		t.AssertNil(err)
+		// A named cache entry is not invalidated by writes, so Force still returns the cached value.
+		values, err = db.Model(table).Cache(arrayOption).Where("id", 102).Array("passport")
+		t.AssertNil(err)
+		t.Assert(len(values), 1)
+		t.Assert(values[0].String(), "placeholder")
 	})
 }
 
