@@ -8,6 +8,11 @@
 package grpcx
 
 import (
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/text/gstr"
+
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/balancer"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/grpcctx"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/resolver"
@@ -38,3 +43,14 @@ var (
 	Client   = modClient{}   // Client is instance of module Client, which manages the client features.
 	Server   = modServer{}   // Server is instance of module Server, which manages the server feature.
 )
+
+func validateServiceName(name string) error {
+	if gstr.Contains(name, gsvc.DefaultSeparator) {
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`invalid service name "%s": must not contain "%s"`,
+			name, gsvc.DefaultSeparator,
+		)
+	}
+	return nil
+}

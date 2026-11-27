@@ -41,11 +41,15 @@ func NewServiceWithName(name string) Service {
 // NewServiceWithKV creates and returns a default implements for interface Service by key-value pair string.
 func NewServiceWithKV(key, value string) (Service, error) {
 	var (
-		err   error
-		array = gstr.Split(gstr.Trim(key, DefaultSeparator), DefaultSeparator)
+		err       error
+		array     = gstr.Split(gstr.Trim(key, DefaultSeparator), DefaultSeparator)
+		endpoints Endpoints
 	)
-	if len(array) < 6 {
+	if len(array) != 6 || array[5] == "" {
 		err = gerror.NewCodef(gcode.CodeInvalidParameter, `invalid service key "%s"`, key)
+		return nil, err
+	}
+	if endpoints, err = newEndpoints(array[5]); err != nil {
 		return nil, err
 	}
 	s := &LocalService{
@@ -54,7 +58,7 @@ func NewServiceWithKV(key, value string) (Service, error) {
 		Namespace:  array[2],
 		Name:       array[3],
 		Version:    array[4],
-		Endpoints:  NewEndpoints(array[5]),
+		Endpoints:  endpoints,
 		Metadata:   make(Metadata),
 	}
 	s.autoFillDefaultAttributes()

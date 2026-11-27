@@ -216,3 +216,42 @@ func TestSetRegistry_NilPanics(t *testing.T) {
 		gsvc.SetRegistry(nil)
 	})
 }
+
+func Test_NewServiceWithKV_ValidAndMalformed(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		svc, err := gsvc.NewServiceWithKV(
+			"/service/default/default/demo/latest/127.0.0.1:8000",
+			`{"protocol":"grpc"}`,
+		)
+		t.AssertNil(err)
+		t.Assert(svc.GetName(), "demo")
+		t.Assert(svc.GetEndpoints().String(), "127.0.0.1:8000")
+	})
+
+	// Extra segment caused by "/" in service name must return an error, not panic.
+	gtest.C(t, func(t *gtest.T) {
+		svc, err := gsvc.NewServiceWithKV(
+			"/service/default/default/gogf-grpcx/demo2/latest/127.0.0.1:8000",
+			`{"protocol":"grpc"}`,
+		)
+		t.AssertNE(err, nil)
+		t.AssertNil(svc)
+	})
+
+	// Malformed endpoint segment in a 6-segment key must return an error, not panic.
+	gtest.C(t, func(t *gtest.T) {
+		svc, err := gsvc.NewServiceWithKV(
+			"/service/default/default/demo/latest/not_an_endpoint",
+			"",
+		)
+		t.AssertNE(err, nil)
+		t.AssertNil(svc)
+	})
+
+	// Too few segments must return an error.
+	gtest.C(t, func(t *gtest.T) {
+		svc, err := gsvc.NewServiceWithKV("/service/default/demo", "")
+		t.AssertNE(err, nil)
+		t.AssertNil(svc)
+	})
+}

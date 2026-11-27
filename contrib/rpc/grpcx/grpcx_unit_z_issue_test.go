@@ -56,3 +56,26 @@ func Test_Issue3292(t *testing.T) {
 		t.Assert(res.ReadAllString(), "1")
 	})
 }
+
+// https://github.com/gogf/gf/issues/4180
+func Test_Issue4180(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		conn, err := grpcx.Client.NewGrpcClientConn("gogf-grpcx/demo2")
+		t.AssertNE(err, nil)
+		t.AssertNil(conn)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		cfg := grpcx.Server.NewConfig()
+		cfg.Address = "127.0.0.1:0"
+		cfg.Name = "gogf-grpcx/demo2"
+		var recovered any
+		func() {
+			defer func() {
+				recovered = recover()
+			}()
+			grpcx.Server.New(cfg)
+		}()
+		t.AssertNE(recovered, nil)
+	})
+}
