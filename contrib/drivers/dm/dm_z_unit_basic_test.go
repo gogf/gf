@@ -56,6 +56,78 @@ func TestTables(t *testing.T) {
 			gtest.AssertEQ(find, true)
 		}
 	})
+
+	// Two schemas of the same login each have a fixture. An owner-unfiltered listing
+	// sees both, so exclusion depends on the OWNER predicate. An explicit schema, an
+	// unquoted lowercase name, and the configured default each omit the other fixture.
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			suffix  = gtime.TimestampMicro() % 1e9
+			schemaA = fmt.Sprintf("GF_TSA_%d", suffix)
+			schemaB = fmt.Sprintf("GF_TSB_%d", suffix)
+			tableA  = fmt.Sprintf("T_FIX_A_%d", suffix)
+			tableB  = fmt.Sprintf("T_FIX_B_%d", suffix)
+			// created keeps the schemas this case owns so a failed drop still names them.
+			created = make([]string, 0, 2)
+		)
+		defer func() {
+			for _, schema := range created {
+				if _, dropErr := db.Exec(ctx, fmt.Sprintf(`DROP SCHEMA %s CASCADE`, schema)); dropErr != nil {
+					t.Errorf("failed to drop schema %s: %v", schema, dropErr)
+				}
+			}
+		}()
+		_, err := db.Exec(ctx, fmt.Sprintf(`CREATE SCHEMA %s`, schemaA))
+		t.AssertNil(err)
+		created = append(created, schemaA)
+		_, err = db.Exec(ctx, fmt.Sprintf(`CREATE SCHEMA %s`, schemaB))
+		t.AssertNil(err)
+		created = append(created, schemaB)
+		_, err = db.Exec(ctx, fmt.Sprintf(`CREATE TABLE %s.%s (ID INT)`, schemaA, tableA))
+		t.AssertNil(err)
+		_, err = db.Exec(ctx, fmt.Sprintf(`CREATE TABLE %s.%s (ID INT)`, schemaB, tableB))
+		t.AssertNil(err)
+
+		unfiltered, err := db.GetArray(ctx,
+			`SELECT TABLE_NAME FROM ALL_TABLES WHERE TABLE_NAME IN (?, ?)`, tableA, tableB,
+		)
+		t.AssertNil(err)
+		visible := make([]string, len(unfiltered))
+		for i, value := range unfiltered {
+			visible[i] = strings.ToUpper(value.String())
+		}
+		t.AssertIN(tableA, visible)
+		t.AssertIN(tableB, visible)
+
+		assertSchema := func(listed []string, err error, present, absent string) {
+			t.AssertNil(err)
+			t.AssertIN(present, listed)
+			t.AssertNI(absent, listed)
+		}
+		listed, err := db.Tables(ctx, schemaA)
+		assertSchema(listed, err, tableA, tableB)
+		listed, err = db.Tables(ctx, schemaB)
+		assertSchema(listed, err, tableB, tableA)
+		listed, err = db.Tables(ctx, strings.ToLower(schemaA))
+		assertSchema(listed, err, tableA, tableB)
+		listed, err = dblink.Tables(ctx, schemaA)
+		assertSchema(listed, err, tableA, tableB)
+		listed, err = dblink.Tables(ctx, schemaB)
+		assertSchema(listed, err, tableB, tableA)
+		listed, err = dblink.Tables(ctx, strings.ToLower(schemaA))
+		assertSchema(listed, err, tableA, tableB)
+
+		assertDefault := func(listed []string, err error) {
+			t.AssertNil(err)
+			t.AssertNI(tableA, listed)
+			t.AssertNI(tableB, listed)
+			for _, table := range tables {
+				t.AssertIN(strings.ToUpper(table), listed)
+			}
+		}
+		assertDefault(db.Tables(ctx))
+		assertDefault(dblink.Tables(ctx))
+	})
 }
 
 // The test scenario index of this test case (exact matching field) is a keyword in the Dameng database and cannot exist as a field name.
