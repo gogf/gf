@@ -21,6 +21,27 @@ module_group() {
     esac
 }
 
+# go_version_at_least checks and returns whether the running go command satisfies the given
+# version, like "1.26" or "1.26.0".
+go_version_at_least() {
+    local required=$1
+    local current
+    current=$(go env GOVERSION | sed 's/^go//; s/[^0-9.].*$//')
+    # Pad the missing minor/patch segments so that "1.26" and "1.26.0" compare equal.
+    while [ "$(echo "$required" | tr -cd '.' | wc -c)" -lt 2 ]; do
+        required="$required.0"
+    done
+    while [ "$(echo "$current" | tr -cd '.' | wc -c)" -lt 2 ]; do
+        current="$current.0"
+    done
+    [ "$(printf '%s\n%s\n' "$required" "$current" | sort -V | head -1)" = "$required" ]
+}
+
+# module_go_version retrieves the `go` directive of the go.mod in given directory.
+module_go_version() {
+    sed -n 's/^go[[:space:]]\{1,\}\([0-9][0-9.]*\).*/\1/p' "$1/go.mod" | head -1
+}
+
 # find all path that contains go.mod.
 for file in `find . -name go.mod`; do
     dirpath=$(dirname $file)
@@ -58,6 +79,15 @@ for file in `find . -name go.mod`; do
             # bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
             continue 1
         fi
+    fi
+
+    # A module may require a newer go version than an older matrix entry provides, for
+    # example `cmd/gf` requires go 1.26.0 because of its `golang.org/x/tools` dependency.
+    # Skip it on the older entries instead of failing the whole matrix leg.
+    moduleGoVersion=$(module_go_version "$dirpath")
+    if [ -n "$moduleGoVersion" ] && ! go_version_at_least "$moduleGoVersion"; then
+        echo "ignore path $dirpath as it requires go >= ${moduleGoVersion}: $(go version)"
+        continue 1
     fi
     
     # if [[ $dirpath = "." ]]; then
