@@ -124,6 +124,12 @@ func Test_StrLimit(t *testing.T) {
 		t.Assert(gstr.StrLimit("我爱GoFrame", 8, ""), "我爱Go")
 		t.Assert(gstr.StrLimit("*", 4, ""), "*")
 	})
+	// No suffix for a string that is not longer than `length`.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.StrLimit("abc", 3), "abc")
+		t.Assert(gstr.StrLimit("abc", 3, "~"), "abc")
+		t.Assert(gstr.StrLimit("abcd", 3), "abc...")
+	})
 }
 
 func Test_StrLimitRune(t *testing.T) {
@@ -133,6 +139,12 @@ func Test_StrLimitRune(t *testing.T) {
 		t.Assert(gstr.StrLimitRune("我爱GoFrame", 2, "**"), "我爱**")
 		t.Assert(gstr.StrLimitRune("我爱GoFrame", 4, ""), "我爱Go")
 		t.Assert(gstr.StrLimitRune("*", 4, ""), "*")
+	})
+	// No suffix for a string that is not longer than `length`.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.StrLimitRune("我爱", 2), "我爱")
+		t.Assert(gstr.StrLimitRune("我爱", 2, "~"), "我爱")
+		t.Assert(gstr.StrLimitRune("我爱Go", 2), "我爱...")
 	})
 }
 
@@ -245,6 +257,12 @@ func Test_Str(t *testing.T) {
 		t.Assert(gstr.Str("name@example.com", ""), "")
 		t.Assert(gstr.Str("name@example.com", "z"), "")
 	})
+	// The `needle` of multiple bytes is included as a whole.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.Str("name@example.com", "@ex"), "@example.com")
+		t.Assert(gstr.Str("name@example.com", ".com"), ".com")
+		t.Assert(gstr.Str("我爱GoFrame", "爱"), "爱GoFrame")
+	})
 }
 
 func Test_StrEx(t *testing.T) {
@@ -252,6 +270,11 @@ func Test_StrEx(t *testing.T) {
 		t.Assert(gstr.StrEx("name@example.com", "@"), "example.com")
 		t.Assert(gstr.StrEx("name@example.com", ""), "")
 		t.Assert(gstr.StrEx("name@example.com", "z"), "")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.StrEx("name@example.com", "@ex"), "ample.com")
+		t.Assert(gstr.StrEx("name@example.com", ".com"), "")
+		t.Assert(gstr.StrEx("我爱GoFrame", "爱"), "GoFrame")
 	})
 }
 

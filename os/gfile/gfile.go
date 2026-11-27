@@ -459,10 +459,7 @@ func IsEmpty(path string) bool {
 // Ext("main.go")  => .go
 // Ext("api.json") => .json
 func Ext(path string) string {
-	ext := filepath.Ext(path)
-	if p := strings.IndexByte(ext, '?'); p != -1 {
-		ext = ext[0:p]
-	}
+	ext, _, _ := strings.Cut(filepath.Ext(path), "?")
 	return ext
 }
 

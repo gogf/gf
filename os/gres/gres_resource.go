@@ -273,7 +273,7 @@ func (r *Resource) Export(src, dst string, option ...ExportOption) error {
 // Dump prints the files of current resource object.
 func (r *Resource) Dump() {
 	var info os.FileInfo
-	r.tree.Iterator(func(key string, value *File) bool {
+	for key, value := range r.tree.Iterator {
 		info = value.FileInfo()
 		fmt.Printf(
 			"%v %8s %s\n",
@@ -281,7 +281,6 @@ func (r *Resource) Dump() {
 			gfile.FormatSize(info.Size()),
 			key,
 		)
-		return true
-	})
+	}
 	fmt.Printf("TOTAL FILES: %d\n", r.tree.Size())
 }

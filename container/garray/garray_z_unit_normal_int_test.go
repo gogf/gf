@@ -95,6 +95,12 @@ func TestIntArray_Sort(t *testing.T) {
 		array.Sort(true)
 		t.Assert(array.Slice(), expect2)
 		t.Assert(array2.Slice(), expect2)
+
+		array3 := garray.NewIntArrayFrom([]int{3, -1, 3, 0, -1})
+		array3.Sort()
+		t.Assert(array3.Slice(), []int{-1, -1, 0, 3, 3})
+		array3.Sort(true)
+		t.Assert(array3.Slice(), []int{3, 3, 0, -1, -1})
 	})
 }
 
@@ -190,6 +196,19 @@ func TestIntArray_Range(t *testing.T) {
 		t.Assert(array1.Range(10, 2), nil)
 		t.Assert(array1.Range(-1, 10), value1)
 		t.Assert(array2.Range(1, 2), []int{1})
+	})
+	// A negative end counts back from the end of the array.
+	gtest.C(t, func(t *gtest.T) {
+		value1 := []int{0, 1, 2, 3, 4, 5, 6}
+		array1 := garray.NewIntArrayFrom(value1)
+		array2 := garray.NewIntArrayFrom(value1, true)
+		t.Assert(array1.Range(0, -1), []int{0, 1, 2, 3, 4, 5})
+		t.Assert(array1.Range(4, -1), []int{4, 5})
+		t.Assert(array1.Range(-2, -5), []int{0, 1})
+		t.Assert(array1.Range(5, -5), nil)
+		t.Assert(array1.Range(0, -10), nil)
+		t.Assert(array1.Range(-2, -10), nil)
+		t.Assert(array2.Range(4, -1), []int{4, 5})
 	})
 }
 

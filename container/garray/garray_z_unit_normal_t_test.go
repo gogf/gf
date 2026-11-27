@@ -540,6 +540,12 @@ func TestTArray_Clone(t *testing.T) {
 		t.AssertEQ(array1, array2)
 
 	})
+	gtest.C(t, func(t *gtest.T) {
+		// A nil underlying slice clones to a non-nil empty slice.
+		array := garray.NewTArrayFrom[any](nil).Clone()
+		t.Assert(array.Len(), 0)
+		t.AssertNE(array.Slice(), nil)
+	})
 }
 
 func TestTArray_CountValues(t *testing.T) {

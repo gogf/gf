@@ -68,6 +68,14 @@ func Test_Parse(t *testing.T) {
 				},
 			},
 		})
+		// Nested slice is not supported yet: the value is discarded without error
+		// and `v` maps to an empty map instead of a slice.
+		m, err = gstr.Parse("v[][]=m")
+		t.AssertNil(err)
+		t.Assert(m, map[string]any{"v": map[string]any{}})
+		m, err = gstr.Parse("v[][]=m&v[][]=n")
+		t.AssertNil(err)
+		t.Assert(m, map[string]any{"v": map[string]any{}})
 		// error
 		m, err = gstr.Parse("v=111&v[]=m&v[]=a&v[]=b")
 		t.Log(err)

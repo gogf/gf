@@ -31,7 +31,7 @@ const (
 	H  = time.Hour
 	M  = time.Minute
 	S  = time.Second
-	MS = time.Millisecond //nolint:staticcheck
+	MS = time.Millisecond
 	US = time.Microsecond
 	NS = time.Nanosecond
 
@@ -282,7 +282,8 @@ func StrToTime(str string, format ...string) (*Time, error) {
 				operation = "-"
 			}
 			// Comparing the given time zone whether equals to current time zone,
-			_, localOffset := time.Now().Zone()
+			// using the local offset at the parsed time, as it changes with daylight saving time.
+			_, localOffset := time.Date(year, time.Month(month), day, hour, min, sec, nsec, local).Zone()
 			zoneOffset := h*3600 + m*60 + s
 			if operation == "-" {
 				zoneOffset = -zoneOffset

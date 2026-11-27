@@ -27,6 +27,9 @@ import (
 // Also see Model.Data and Model.Where functions.
 func (m *Model) Update(dataAndWhere ...any) (result sql.Result, err error) {
 	var ctx = m.GetCtx()
+	if err = m.checkPartitionForWrite("UPDATE"); err != nil {
+		return nil, err
+	}
 	if len(dataAndWhere) > 0 {
 		if len(dataAndWhere) > 2 {
 			return m.Data(dataAndWhere[0]).Where(dataAndWhere[1], dataAndWhere[2:]...).Update()

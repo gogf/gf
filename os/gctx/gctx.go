@@ -31,13 +31,10 @@ var (
 func init() {
 	// All environment key-value pairs.
 	m := make(map[string]string)
-	i := 0
 	for _, s := range os.Environ() {
-		i = strings.IndexByte(s, '=')
-		if i == -1 {
-			continue
+		if key, value, found := strings.Cut(s, "="); found {
+			m[key] = value
 		}
-		m[s[0:i]] = s[i+1:]
 	}
 	// OpenTelemetry from environments.
 	initCtx = otel.GetTextMapPropagator().Extract(

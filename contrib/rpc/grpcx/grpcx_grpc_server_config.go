@@ -9,6 +9,7 @@ package grpcx
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"google.golang.org/grpc"
 
@@ -51,6 +52,19 @@ type GrpcServerConfig struct {
 
 	// (optional) Endpoints are custom endpoints for service register, it uses Address if empty.
 	Endpoints []string
+
+	// (optional) Timeout is the maximum duration for handling a unary request on the server side.
+	// The handling context is canceled and the client gets a `DeadlineExceeded` error once it is reached,
+	// even if the handler does not honor the context. A client deadline that is shorter still takes effect.
+	// Cancellation is cooperative: a handler that ignores the context is not stopped, it keeps running
+	// in the background until it returns on its own.
+	// It is not limited if the value is not greater than 0.
+	Timeout time.Duration
+
+	// (optional) MethodTimeouts specifies the timeout for individual unary methods,
+	// the key is the full method name like `/protobuf.Greeter/SayHello`.
+	// It overrides `Timeout` for the matched method, and a value not greater than 0 disables the limit for it.
+	MethodTimeouts map[string]time.Duration
 
 	// (optional) GRPC Server options.
 	Options []grpc.ServerOption

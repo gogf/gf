@@ -8,7 +8,7 @@ package garray
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 	"sync"
 
 	"github.com/gogf/gf/v2/util/gconv"
@@ -73,9 +73,7 @@ func NewSortedArrayRange(start, end, step int, comparator func(a, b any) int, sa
 func NewSortedArrayFrom(array []any, comparator func(a, b any) int, safe ...bool) *SortedArray {
 	a := NewSortedArraySize(0, comparator, safe...)
 	a.array = array
-	sort.Slice(a.array, func(i, j int) bool {
-		return a.getComparator()(a.array[i], a.array[j]) < 0
-	})
+	slices.SortFunc(a.array, a.getComparator())
 	return a
 }
 

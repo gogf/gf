@@ -46,16 +46,16 @@ func BuildParams(params any, noUrlEncode ...bool) (encodedParamStr string) {
 	if len(noUrlEncode) == 1 {
 		urlEncode = !noUrlEncode[0]
 	}
-	s := ""
+	var builder strings.Builder
 	for k, v := range m {
 		// Ignore nil attributes.
 		if empty.IsNil(v) {
 			continue
 		}
-		if len(encodedParamStr) > 0 {
-			encodedParamStr += "&"
+		if builder.Len() > 0 {
+			builder.WriteByte('&')
 		}
-		s = gconv.String(v)
+		s := gconv.String(v)
 		if urlEncode {
 			if strings.HasPrefix(s, fileUploadingKey) {
 				// No url encoding if value starts with file uploading marker.
@@ -63,9 +63,11 @@ func BuildParams(params any, noUrlEncode ...bool) (encodedParamStr string) {
 				s = gurl.Encode(s)
 			}
 		}
-		encodedParamStr += k + "=" + s
+		builder.WriteString(k)
+		builder.WriteByte('=')
+		builder.WriteString(s)
 	}
-	return
+	return builder.String()
 }
 
 // HeaderToMap coverts request headers to map.

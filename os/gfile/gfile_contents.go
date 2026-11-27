@@ -8,7 +8,9 @@ package gfile
 
 import (
 	"bufio"
+	"bytes"
 	"io"
+	"math"
 	"os"
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -100,10 +102,8 @@ func GetNextCharOffset(reader io.ReaderAt, char byte, start int64) int64 {
 	offset := start
 	for {
 		if n, err := reader.ReadAt(buffer, offset); n > 0 {
-			for i := 0; i < n; i++ {
-				if buffer[i] == char {
-					return int64(i) + offset
-				}
+			if i := bytes.IndexByte(buffer[:n], char); i >= 0 {
+				return int64(i) + offset
 			}
 			offset += int64(n)
 		} else if err != nil {
@@ -183,10 +183,15 @@ func ReadLines(file string, callback func(line string) error) error {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+	// Keep the default initial buffer and lift the 64KB max token size limit.
+	scanner.Buffer(nil, math.MaxInt)
 	for scanner.Scan() {
 		if err = callback(scanner.Text()); err != nil {
 			return err
 		}
+	}
+	if err = scanner.Err(); err != nil {
+		return gerror.Wrapf(err, `Read file "%s" failed`, file)
 	}
 	return nil
 }
@@ -204,10 +209,15 @@ func ReadLinesBytes(file string, callback func(bytes []byte) error) error {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+	// Keep the default initial buffer and lift the 64KB max token size limit.
+	scanner.Buffer(nil, math.MaxInt)
 	for scanner.Scan() {
 		if err = callback(scanner.Bytes()); err != nil {
 			return err
 		}
+	}
+	if err = scanner.Err(); err != nil {
+		return gerror.Wrapf(err, `Read file "%s" failed`, file)
 	}
 	return nil
 }

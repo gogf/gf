@@ -16,11 +16,12 @@ import (
 
 // IpToLongBigEndian converts ip address to an uint32 integer with big endian.
 func IpToLongBigEndian(ip string) uint32 {
-	netIP := net.ParseIP(ip)
+	// To4 returns nil for an IPv6 address, too.
+	netIP := net.ParseIP(ip).To4()
 	if netIP == nil {
 		return 0
 	}
-	return binary.BigEndian.Uint32(netIP.To4())
+	return binary.BigEndian.Uint32(netIP)
 }
 
 // LongToIpBigEndian converts an uint32 integer ip address to its string type address with big endian.
@@ -32,11 +33,12 @@ func LongToIpBigEndian(long uint32) string {
 
 // IpToLongLittleEndian converts ip address to an uint32 integer with little endian.
 func IpToLongLittleEndian(ip string) uint32 {
-	netIp := net.ParseIP(ip)
+	// To4 returns nil for an IPv6 address, too.
+	netIp := net.ParseIP(ip).To4()
 	if netIp == nil {
 		return 0
 	}
-	return binary.LittleEndian.Uint32(netIp.To4())
+	return binary.LittleEndian.Uint32(netIp)
 }
 
 // LongToIpLittleEndian converts an uint32 integer ip address to its string type address with little endian.
