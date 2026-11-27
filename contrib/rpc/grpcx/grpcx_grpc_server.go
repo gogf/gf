@@ -8,6 +8,7 @@ package grpcx
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -127,8 +128,11 @@ func (s *GrpcServer) Run() {
 	s.doSignalListen()
 }
 
+// doServeAsynchronously serves the listener asynchronously.
+// grpc.ErrServerStopped is expected when the server is stopped before or while serving,
+// so it is ignored instead of being treated as a fatal error, which would exit the process.
 func (s *GrpcServer) doServeAsynchronously(ctx context.Context, listener net.Listener) {
-	if err := s.Server.Serve(listener); err != nil {
+	if err := s.Server.Serve(listener); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
 }
