@@ -306,10 +306,14 @@ func (a *SortedTArray[T]) PopLefts(size int) []T {
 	}
 	if size >= len(a.array) {
 		array := a.array
-		a.array = a.array[:0]
+		// The returned slice takes the underlying array away,
+		// so the following adding does not overwrite the popped items.
+		a.array = make([]T, 0)
 		return array
 	}
-	value := a.array[0:size]
+	// Limit the capacity, so appending to the returned slice
+	// does not overwrite the items that are left in the array.
+	value := a.array[0:size:size]
 	a.array = a.array[size:]
 	return value
 }
@@ -324,10 +328,14 @@ func (a *SortedTArray[T]) PopRights(size int) []T {
 	index := len(a.array) - size
 	if index <= 0 {
 		array := a.array
-		a.array = a.array[:0]
+		// The returned slice takes the underlying array away,
+		// so the following adding does not overwrite the popped items.
+		a.array = make([]T, 0)
 		return array
 	}
-	value := a.array[index:]
+	// Copy the popped items, as the following adding
+	// writes to the same place of the underlying array.
+	value := cloneSlice(a.array[index:])
 	a.array = a.array[:index]
 	return value
 }

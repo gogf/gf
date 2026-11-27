@@ -291,6 +291,41 @@ func TestSortedTArray_PopRights(t *testing.T) {
 	})
 }
 
+// The slice returned by PopLefts/PopRights must not share
+// the writable part of the underlying array with the array.
+func TestSortedTArray_PopLeftsAndPopRights_NoAliasing(t *testing.T) {
+	// The items popped from the right are kept after adding to the array.
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedTArrayFrom([]int{1, 2, 3, 4, 5}, gutil.ComparatorT)
+		popped := array.PopRights(2)
+		array.Add(0)
+		t.Assert(popped, []int{4, 5})
+		t.Assert(array.Slice(), []int{0, 1, 2, 3})
+	})
+	// The array is kept after appending to the items popped from the left.
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedTArrayFrom([]int{1, 2, 3, 4, 5}, gutil.ComparatorT)
+		popped := array.PopLefts(2)
+		popped = append(popped, 99)
+		t.Assert(popped, []int{1, 2, 99})
+		t.Assert(array.Slice(), []int{3, 4, 5})
+	})
+	// All items are popped.
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedTArrayFrom([]int{1, 2, 3}, gutil.ComparatorT)
+		popped := array.PopLefts(3)
+		array.Add(7)
+		t.Assert(popped, []int{1, 2, 3})
+		t.Assert(array.Slice(), []int{7})
+
+		array = garray.NewSortedTArrayFrom([]int{1, 2, 3}, gutil.ComparatorT)
+		popped = array.PopRights(10)
+		array.Add(7)
+		t.Assert(popped, []int{1, 2, 3})
+		t.Assert(array.Slice(), []int{7})
+	})
+}
+
 func TestSortedTArray_Range(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"a", "d", "c", "b", "e", "f"}
