@@ -26,7 +26,14 @@ module_group() {
 go_version_at_least() {
     local required=$1
     local current
-    current=$(go env GOVERSION | sed 's/^go//; s/[^0-9.].*$//')
+    # Only a released version, like `go1.26.3`, is parsed. A devel or pre-release toolchain
+    # reports something like `devel go1.28-abcdef` or `go1.26rc1`, which is treated as
+    # satisfying the requirement below: building the module then surfaces the real version
+    # error instead of silently skipping every module of the matrix entry.
+    current=$(go env GOVERSION | sed -n 's/^go\([0-9][0-9]*\.[0-9][0-9.]*\)$/\1/p')
+    if [ -z "$current" ]; then
+        return 0
+    fi
     # Pad the missing minor/patch segments so that "1.26" and "1.26.0" compare equal.
     while [ "$(echo "$required" | tr -cd '.' | wc -c)" -lt 2 ]; do
         required="$required.0"
