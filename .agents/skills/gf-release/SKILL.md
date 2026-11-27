@@ -1,7 +1,7 @@
 ---
 name: gf-release
 description: >-
-  为 GoFrame（gogf/gf）仓库执行正式发版：用户只说发版时先给出提交统计并用结构化选项让用户选择修正版本、子版本或主版本，再建发版分支、统一提升所有模块版本、提交并发起发版 PR，合并后在 master 上打注解 tag，并核对自动发布出来的 GitHub Release、子模块 tag 与 CLI 依赖 PR，以及整理 Release Notes 与站点发布文档。
+  为 GoFrame（gogf/gf）仓库执行正式发版：用户只说发版时先给出提交统计并用结构化选项让用户选择修正版本、子版本或主版本，再建发版分支、统一提升所有模块版本、提交并发起发版 PR，合并后在 master 上打注解 tag，核对自动发布出来的 GitHub Release 与子模块 tag，合并机器人自动提交的 CLI 依赖 PR，以及整理 Release Notes 与站点发布文档。
   依赖 Makefile 的 branch、version、tag 三个目标与 .make_version.sh 脚本，以及 release.yml、tag.yml 两条自动发布流水线。
   必须由用户手动触发，禁止自动运行。
 compatibility: 需要 git、已登录的 GitHub CLI `gh`、可用的 Go 工具链；刷新内嵌模板需要已安装 `gf` CLI 并能访问 github.com；`make version` 会在每个模块执行 `go mod tidy`，需要模块代理可用。
@@ -20,6 +20,7 @@ compatibility: 需要 git、已登录的 GitHub CLI `gh`、可用的 Go 工具�
 5. 禁止在功能分支上打 tag，禁止用`git tag -f`覆盖已有 tag，禁止删除或移动已发布的 tag。
 6. 每一步都要先核对上一步的真实输出再进入下一步。任何一步失败就停下报告，不要带着失败继续打 tag。
 7. 发版 PR 的标题固定为`chore(release): bump version to vX.Y.Z`，标题遵守`.github/PULL_REQUEST_TEMPLATE.MD`并用英文书写。
+8. 打 tag 后必须合并机器人自动提交的 CLI 依赖 PR（`fix: update gf cli to vX.Y.Z`，主要改动是`cmd/gf/go.sum`），不要手工改`cmd/gf/go.sum`代替这一步，也不要把「PR 已出现」当作「已合并」。
 
 ## 前置检查
 
@@ -183,7 +184,7 @@ gh run watch <release.yml 的 run id> -R gogf/gf --exit-status
 | --- | --- | --- |
 | GitHub Release | `.github/workflows/release.yml` | 结论为`success`，非草稿，含`gf_linux_amd64`、`gf_windows_amd64.exe`等全平台二进制 |
 | 子模块 tag | `.github/workflows/tag.yml` | `contrib/**/vX.Y.Z`与`cmd/gf/vX.Y.Z`都已创建 |
-| CLI 依赖 PR | `.github/workflows/tag.yml` | 自动出现`fix: update gf cli to vX.Y.Z`，合并后`cmd/gf/go.mod`指向新版本 |
+| CLI 依赖 PR | `.github/workflows/tag.yml` | 自动出现`fix: update gf cli to vX.Y.Z`，必须按步骤 8 合并；改动为`cmd/gf/go.sum`补齐新版本校验和 |
 
 ```bash
 gh release view vX.Y.Z -R gogf/gf --json tagName,isDraft,publishedAt,assets
@@ -193,7 +194,29 @@ gh pr list -R gogf/gf --state open --json number,title,headRefName
 
 任一流水线失败就停下，用`gh run view <id> -R gogf/gf --log-failed`定位；流水线未完成或失败时，不要进入后续步骤，也不要把未完成描述成已完成。
 
-### 8. 生成并整理 Release Notes
+### 8. 合并机器人 CLI 依赖 PR
+
+`tag.yml`除了补子模块 tag，还会用机器人账号（`TagRobot` / `app/github-actions`）自动创建标题为`fix: update gf cli to vX.Y.Z`、头分支`fix/vX.Y.Z`、base 为`master`的 PR。它的实际改动通常只有`cmd/gf/go.sum`（补齐新 tag 的校验和）和`cmd/gf`下`testdata`里的固定`go.mod`夹具：发版 PR 已经改过`cmd/gf/go.mod`，但那时子模块 tag 还不存在，`go.sum`无法记录`vX.Y.Z`的校验和，只能等`tag.yml`脚本（`.github/workflows/scripts/update_version.sh ./cmd/gf vX.Y.Z`）跑完`go mod tidy`后补上。**这一步不能省**：不合并的话`cmd/gf/go.sum`缺少新版本校验和，后续发版会反复出现同样的 PR，干净环境构建也会失败。发版人自己合并，不要指派给其他贡献者。
+
+```bash
+gh pr list -R gogf/gf --state open --json number,title,headRefName,author
+gh pr view <PR 号> -R gogf/gf --json title,state,mergeable,mergeStateStatus,files,statusCheckRollup
+gh pr merge <PR 号> -R gogf/gf --squash --delete-branch
+```
+
+合并前确认：标题与头分支对应本次 tag、作者是机器人、CI 已通过（`statusCheckRollup`无失败项）、没有冲突；`files`里不应出现`cmd/gf/go.mod`的版本回退。
+
+合并后核对`master`：
+
+```bash
+git checkout master && git pull origin master && git log --oneline -3
+grep -n "github.com/gogf/gf" cmd/gf/go.mod | head
+grep -c "github.com/gogf/gf.*vX.Y.Z" cmd/gf/go.sum
+```
+
+`cmd/gf/go.mod`中`github.com/gogf/gf/v2`以及`contrib/**`依赖都应为`vX.Y.Z`，`cmd/gf/go.sum`里每个子模块都已有`vX.Y.Z`的条目（本次参考量为 16 条，随模块数量变化），`master`顶部出现该机器人提交。PR 没出现时先按步骤 7 确认`tag.yml`成功，再等机器人推送；始终不要手工改`cmd/gf/go.sum`或手工建这个 PR。
+
+### 9. 生成并整理 Release Notes
 
 Release 页面默认只有自动生成的原始变更列表，需要补一版可读的说明。这一步由技能执行者引导操作人员完成，不要自己直接改页面内容。
 
@@ -222,9 +245,9 @@ gh release view vX.Y.Z -R gogf/gf --json body --jq '.body' | head -40
 
 只改正文，不要改 tag、附件和发布状态，不要删除自动生成的真实条目。
 
-### 9. 同步站点发布文档（可选）
+### 10. 同步站点发布文档（可选）
 
-`gf-site`仓库可用时（默认与本仓库同级，例如`../gf-site`），把同一批变更整理成站点发布文档，分类口径与步骤 8 保持一致。
+`gf-site`仓库可用时（默认与本仓库同级，例如`../gf-site`），把同一批变更整理成站点发布文档，分类口径与步骤 9 保持一致。
 
 1. 选择目录：补丁版本放在`docs/release/v<major>.<minor>.x/`（例如`docs/release/v2.10.x/`）；新子版本放在`docs/release/`根目录，命名为`v<major>.<minor> YYYY-MM-DD.md`。
 2. 文件名用`vX.Y.Z YYYY-MM-DD.md`，日期取正式发布日（与 Release 的`publishedAt`一致），不要写草稿日期。
@@ -243,6 +266,8 @@ gh release view vX.Y.Z -R gogf/gf --json body --jq '.body' | head -40
 | `go.sum`出现大量无关升级 | 回退该模块改动单独 tidy 复查，可疑变更不要带进发版提交 |
 | tag 推送后没有 Release | 检查`release.yml`运行记录，确认 tag 以`v`开头且指向`master`上的提交 |
 | 子模块 tag 缺失 | `tag.yml`只在 tag push 时触发，可重跑该 workflow，但不要手工给其他提交补 tag |
+| 机器人 CLI 依赖 PR 迟迟不出现 | 先看`tag.yml`是否成功；成功后仍无 PR 时重跑该 workflow，不要手工建 PR 或手工改`cmd/gf/go.sum` |
+| 机器人 CLI 依赖 PR 有冲突或 CI 失败 | 在该头分支上重跑`.github/workflows/scripts/update_version.sh ./cmd/gf vX.Y.Z`后推送，或重跑`tag.yml`，修好再合并，不要跳过一个有冲突的 PR |
 | `gh run watch`长时间无输出 | 改用`gh run list`轮询`status`与`conclusion`，不要在流水线未完成时编辑 Release |
 | 自动生成的发布说明对比范围不对 | 指定`previous_tag_name`为上一个正式 tag 重新生成，不要手工拼 PR 列表 |
 | 操作人员贴回的发布说明缺少作者或链接 | 用`generate-notes`接口结果对照补全，仍对不上就请操作人员重新生成 |
@@ -252,6 +277,6 @@ gh release view vX.Y.Z -R gogf/gf --json body --jq '.body' | head -40
 
 ## 输出约定
 
-完成后报告：确定的版本号与依据、发版分支名、bump 提交与 PR URL、tag 名、`release.yml`与`tag.yml`的结论、Release 与子模块 tag 的核对结果、整理后的 Release Notes 分类结果、自动 CLI 依赖 PR 的编号、站点发布文档的中英文路径（如有），以及所有未完成或需要人工确认的事项。
+完成后报告：确定的版本号与依据、发版分支名、bump 提交与 PR URL、tag 名、`release.yml`与`tag.yml`的结论、Release 与子模块 tag 的核对结果、机器人 CLI 依赖 PR 的编号与合并结果、整理后的 Release Notes 分类结果、站点发布文档的中英文路径（如有），以及所有未完成或需要人工确认的事项。
 
 不要输出 token 或完整 diff；没有实际执行成功的命令不要描述成已完成。
