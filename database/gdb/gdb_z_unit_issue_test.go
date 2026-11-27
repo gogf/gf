@@ -149,3 +149,69 @@ func Test_Issue4787(t *testing.T) {
 		t.AssertEQ(list[1]["name"], "smith")
 	})
 }
+
+// Test_Issue4401 tests that scanning JSON/map fields containing nested primitive
+// slice fields converts plain non-iVal slices, JSON strings, bytes, and nil cleanly.
+// See https://github.com/gogf/gf/issues/4401
+func Test_Issue4401(t *testing.T) {
+	type SharedRelation struct {
+		Key         string  `json:"key"`
+		SharedOrgId []int64 `json:"sharedOrgId"`
+		SharedDepId []int64 `json:"sharedDepId"`
+	}
+	type SsoRoleItem struct {
+		Id             int64                      `json:"id"`
+		Name           string                     `json:"name"`
+		Pk             []string                   `json:"pk"`
+		SharedRelation map[string]*SharedRelation `json:"sharedRelation"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		record := Record{
+			"id":             gvar.New(1),
+			"name":           gvar.New("admin"),
+			"pk":             gvar.New(`["read","write"]`),
+			"sharedRelation": gvar.New(`{"CRM_CLIENT_TITLE:R":{"key":"CRM_CLIENT_TITLE:R","sharedDepId":null,"sharedOrgId":[1,2]}}`),
+		}
+		var data *SsoRoleItem
+		t.AssertNil(record.Struct(&data))
+		t.AssertNE(data, nil)
+		t.AssertEQ(data.Id, int64(1))
+		t.AssertEQ(data.Name, "admin")
+		t.AssertEQ(data.Pk, []string{"read", "write"})
+		rel := data.SharedRelation["CRM_CLIENT_TITLE:R"]
+		t.AssertNE(rel, nil)
+		t.AssertEQ(rel.Key, "CRM_CLIENT_TITLE:R")
+		t.AssertEQ(rel.SharedOrgId, []int64{1, 2})
+		t.AssertNil(rel.SharedDepId)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		type Inner struct {
+			Tags   []string  `json:"tags"`
+			Ids    []int64   `json:"ids"`
+			Scores []float64 `json:"scores"`
+			Empty  []int32   `json:"empty"`
+		}
+		var out Inner
+		src := map[string]any{
+			"tags":   `["go","gf"]`,
+			"ids":    []byte(`[10,20]`),
+			"scores": []any{1.5, 2.5},
+			"empty":  gvar.New(nil),
+		}
+		t.AssertNil(GetConverter().Struct(src, &out))
+		t.AssertEQ(out.Tags, []string{"go", "gf"})
+		t.AssertEQ(out.Ids, []int64{10, 20})
+		t.AssertEQ(out.Scores, []float64{1.5, 2.5})
+		t.AssertNil(out.Empty)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		type Bad struct {
+			Ids []int64 `json:"ids"`
+		}
+		var out Bad
+		t.AssertNE(GetConverter().Struct(map[string]any{"ids": 123}, &out), nil)
+	})
+}
