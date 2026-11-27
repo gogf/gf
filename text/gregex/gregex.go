@@ -105,14 +105,29 @@ func ReplaceFunc(pattern string, src []byte, replaceFunc func(b []byte) []byte) 
 // The parameter `match` type for `replaceFunc` is [][]byte,
 // which is the result contains all sub-patterns of `pattern` using Match function.
 func ReplaceFuncMatch(pattern string, src []byte, replaceFunc func(match [][]byte) []byte) ([]byte, error) {
-	if r, err := getRegexp(pattern); err == nil {
-		return r.ReplaceAllFunc(src, func(bytes []byte) []byte {
-			match, _ := Match(pattern, bytes)
-			return replaceFunc(match)
-		}), nil
-	} else {
+	r, err := getRegexp(pattern)
+	if err != nil {
 		return nil, err
 	}
+	var (
+		result  []byte
+		lastEnd int
+	)
+	// The sub-patterns are taken from the match in `src` itself. Matching the matched
+	// part again alone loses its context, so a pattern with `^`, `$`, `\b` or `\B`
+	// may match it in another way or not at all.
+	for _, loc := range r.FindAllSubmatchIndex(src, -1) {
+		match := make([][]byte, len(loc)/2)
+		for i := range match {
+			if loc[2*i] >= 0 {
+				match[i] = src[loc[2*i]:loc[2*i+1]:loc[2*i+1]]
+			}
+		}
+		result = append(result, src[lastEnd:loc[0]]...)
+		result = append(result, replaceFunc(match)...)
+		lastEnd = loc[1]
+	}
+	return append(result, src[lastEnd:]...), nil
 }
 
 // ReplaceStringFunc replace all matched `pattern` in string `src`
@@ -129,14 +144,14 @@ func ReplaceStringFunc(pattern string, src string, replaceFunc func(s string) st
 // The parameter `match` type for `replaceFunc` is []string,
 // which is the result contains all sub-patterns of `pattern` using MatchString function.
 func ReplaceStringFuncMatch(pattern string, src string, replaceFunc func(match []string) string) (string, error) {
-	if r, err := getRegexp(pattern); err == nil {
-		return string(r.ReplaceAllFunc([]byte(src), func(bytes []byte) []byte {
-			match, _ := MatchString(pattern, string(bytes))
-			return []byte(replaceFunc(match))
-		})), nil
-	} else {
-		return "", err
-	}
+	bytes, err := ReplaceFuncMatch(pattern, []byte(src), func(match [][]byte) []byte {
+		array := make([]string, len(match))
+		for i, v := range match {
+			array[i] = string(v)
+		}
+		return []byte(replaceFunc(array))
+	})
+	return string(bytes), err
 }
 
 // Split slices `src` into substrings separated by the expression and returns a slice of

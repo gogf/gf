@@ -307,6 +307,52 @@ func Test_ReplaceStringFuncMatch(t *testing.T) {
 	})
 }
 
+// Test_ReplaceFuncMatch_Context checks that the sub-patterns passed to `replaceFunc`
+// are those of the match in the source, for a pattern which depends on what is around the match.
+func Test_ReplaceFuncMatch_Context(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// `\B` is true after "1" in "12", but not after "1" alone.
+		s, err := gregex.ReplaceStringFuncMatch(`(\d)\B`, "12", func(match []string) string {
+			t.Assert(len(match), 2)
+			return "[" + match[1] + "]"
+		})
+		t.AssertNil(err)
+		t.Assert(s, "[1]2")
+
+		b, err := gregex.ReplaceFuncMatch(`(\d)\B`, []byte("12"), func(match [][]byte) []byte {
+			t.Assert(len(match), 2)
+			return append([]byte("["), append(match[1], ']')...)
+		})
+		t.AssertNil(err)
+		t.Assert(b, []byte("[1]2"))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The first "a" is matched by the second branch, as "b" follows it.
+		s, err := gregex.ReplaceStringFuncMatch(`(a)\b|(a)`, "ab a", func(match []string) string {
+			if match[1] != "" {
+				return "1"
+			}
+			return "2"
+		})
+		t.AssertNil(err)
+		t.Assert(s, "2b 1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Empty matches are replaced in the same places as ReplaceStringFunc does.
+		for _, src := range []string{"", "b", "baaac", "aab", "中a文"} {
+			s1, err := gregex.ReplaceStringFuncMatch(`a*`, src, func(match []string) string {
+				return "<" + match[0] + ">"
+			})
+			t.AssertNil(err)
+			s2, err := gregex.ReplaceStringFunc(`a*`, src, func(s string) string {
+				return "<" + s + ">"
+			})
+			t.AssertNil(err)
+			t.Assert(s1, s2)
+		}
+	})
+}
+
 func Test_Split(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		re := "a(a+b+)b"
