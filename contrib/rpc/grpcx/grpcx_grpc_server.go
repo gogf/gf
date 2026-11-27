@@ -68,6 +68,9 @@ func (s modServer) New(conf ...*GrpcServerConfig) *GrpcServer {
 	if !gstr.Contains(config.Address, ":") {
 		g.Log().Fatal(ctx, "invalid service address, should contain listening port")
 	}
+	if err := validateServiceName(config.Name); err != nil {
+		panic(err)
+	}
 	if config.Logger == nil {
 		config.Logger = glog.New()
 	}
@@ -173,6 +176,9 @@ func (s *GrpcServer) doServiceRegister() {
 	)
 	// Register service list after server starts.
 	for i, service := range s.services {
+		if err = validateServiceName(service.GetName()); err != nil {
+			panic(err)
+		}
 		service = &gsvc.LocalService{
 			Name:      service.GetName(),
 			Endpoints: s.calculateListenedEndpoints(ctx),

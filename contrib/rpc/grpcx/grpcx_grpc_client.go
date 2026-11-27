@@ -36,6 +36,9 @@ func (c modClient) NewGrpcClientConn(serviceNameOrAddress string, opts ...grpc.D
 		grpcClientOptions = make([]grpc.DialOption, 0)
 	)
 	if isServiceName(serviceNameOrAddress) {
+		if err := validateServiceName(serviceNameOrAddress); err != nil {
+			return nil, err
+		}
 		target = fmt.Sprintf(
 			`%s://%s`,
 			gsvc.Schema, gsvc.NewServiceWithName(serviceNameOrAddress).GetKey(),

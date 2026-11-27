@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -109,5 +110,23 @@ func Test_Grpcx_Grpc_Server_Config_Timeout(t *testing.T) {
 		}))
 		t.Assert(c.Timeout, 30*time.Second)
 		t.Assert(c.MethodTimeouts["/protobuf.Greeter/SayHello"], 5*time.Second)
+	})
+}
+
+func Test_Grpcx_Grpc_Server_InvalidServiceName(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		cfg := Server.NewConfig()
+		cfg.Address = "127.0.0.1:0"
+		cfg.Endpoints = []string{"127.0.0.1:8080"}
+		s := Server.New(cfg)
+		s.Service(&gsvc.LocalService{Name: "gogf-grpcx/demo2"})
+		var recovered any
+		func() {
+			defer func() {
+				recovered = recover()
+			}()
+			s.doServiceRegister()
+		}()
+		t.AssertNE(recovered, nil)
 	})
 }
