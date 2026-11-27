@@ -251,6 +251,13 @@ func parsePatternItem(
 				rangeMax = number
 			}
 		}
+		// A value out of the field range never meets any time,
+		// so the job would be accepted but never run.
+		if rangeMin < min || rangeMin > max || rangeMax < min || rangeMax > max {
+			return nil, gerror.NewCodef(
+				gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, itemElem,
+			)
+		}
 		for i := rangeMin; i <= rangeMax; i += interval {
 			itemMap[i] = struct{}{}
 		}
