@@ -9,6 +9,7 @@ package gstr
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"regexp"
 	"slices"
 	"strconv"
@@ -74,13 +75,35 @@ func Reverse(str string) string {
 // NumberFormat(1234.56, 2, ".", "")  -> 1234.56
 // NumberFormat(1234.56, 2, ",", " ") -> 1 234,56
 func NumberFormat(number float64, decimals int, decPoint, thousandsSep string) string {
-	neg := false
-	if number < 0 {
-		number = -number
-		neg = true
-	}
-	// Will round off
+	neg := number < 0
+	number = math.Abs(number)
 	str := fmt.Sprintf("%."+strconv.Itoa(decimals)+"F", number)
+	// PHP rounds half away from zero, whereas Sprintf rounds half to even.
+	// The shortest decimal form of the number is rounded digit by digit,
+	// as scaling the number in float64 is not exact for large values.
+	short := strconv.FormatFloat(number, 'f', -1, 64)
+	if dot := strings.IndexByte(short, '.'); decimals >= 0 && dot >= 0 && len(short)-dot-1 > decimals {
+		digits := []byte(short[:dot] + short[dot+1:dot+1+decimals])
+		if short[dot+1+decimals] >= '5' {
+			i := len(digits) - 1
+			for ; i >= 0 && digits[i] == '9'; i-- {
+				digits[i] = '0'
+			}
+			if i >= 0 {
+				digits[i]++
+			} else {
+				digits = append([]byte{'1'}, digits...)
+			}
+		}
+		str = string(digits[:len(digits)-decimals])
+		if decimals > 0 {
+			str += "." + string(digits[len(digits)-decimals:])
+		}
+	}
+	// PHP drops the sign of a number that is rounded to zero.
+	if strings.Trim(str, "0.") == "" {
+		neg = false
+	}
 	prefix, suffix := "", ""
 	if decimals > 0 {
 		prefix = str[:len(str)-(decimals+1)]
