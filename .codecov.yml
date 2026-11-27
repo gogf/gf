@@ -15,6 +15,31 @@ codecov:
     after_n_builds: 3
     wait_for_ci: true
 
+# The project status compares a commit against its base with no tolerance by default, so
+# any drop fails it. The merged figure is not stable at that precision: the three flagged
+# reports above are combined into one number, and the driver legs talk to real databases,
+# so a timed-out connection or a skipped case moves the total by a few lines. On recent
+# master commits that shows up as swings of 0.01% to 0.05% between commits that changed
+# no covered code, which fails about a third of them.
+#
+# 0.1% is about 47 lines of the ~47k line total. It covers the noise seen so far while
+# staying far smaller than the drop a leg produces when its tests fail and it uploads a
+# partial report (several percent on a flag, ~0.2% on the total).
+#
+# The patch status is left explicit at its default of no tolerance: it only looks at the
+# lines a change adds, which does not carry this noise, and it is what actually rejects a
+# change that lands code without tests.
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 0.1%
+    patch:
+      default:
+        target: auto
+        threshold: 0%
+
 # Flags follow `go-<version>-<group>`, keeping the Go version as part of the flag name
 # and tracking every group of that version on its own. Default rules apply to any flag
 # a future run introduces (for example a new Go version), so no hardcoded flag list has
