@@ -167,7 +167,8 @@ func (c *AdapterMemory) SetIfNotExistFunc(ctx context.Context, key any, f Func, 
 // It deletes the `key` if `duration` < 0 or given `value` is nil.
 //
 // Note that it differs from function `SetIfNotExistFunc` is that the function `f` is executed within
-// writing mutex lock for concurrent safety purpose.
+// writing mutex lock for concurrent safety purpose. The lock is held for `key` only, so `f` can use
+// other keys of the same cache.
 func (c *AdapterMemory) SetIfNotExistFuncLock(ctx context.Context, key any, f Func, duration time.Duration) (bool, error) {
 	isContained, err := c.Contains(ctx, key)
 	if err != nil {
@@ -246,7 +247,8 @@ func (c *AdapterMemory) GetOrSetFunc(ctx context.Context, key any, f Func, durat
 // if `value` is a function and the function result is nil.
 //
 // Note that it differs from function `GetOrSetFunc` is that the function `f` is executed within
-// writing mutex lock for concurrent safety purpose.
+// writing mutex lock for concurrent safety purpose. The lock is held for `key` only, so `f` can use
+// other keys of the same cache.
 func (c *AdapterMemory) GetOrSetFuncLock(ctx context.Context, key any, f Func, duration time.Duration) (*gvar.Var, error) {
 	v, err := c.Get(ctx, key)
 	if err != nil {

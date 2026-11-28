@@ -15,8 +15,10 @@ import (
 )
 
 type memoryData struct {
-	mu   sync.RWMutex           // dataMu ensures the concurrent safety of underlying data map.
-	data map[any]memoryDataItem // data is the underlying cache data which is stored in a hash table.
+	mu       sync.RWMutex             // dataMu ensures the concurrent safety of underlying data map.
+	data     map[any]memoryDataItem   // data is the underlying cache data which is stored in a hash table.
+	keyMu    sync.Mutex               // keyMu ensures the concurrent safety of keyLocks.
+	keyLocks map[any]*memoryKeyLocker // keyLocks holds the lockers of keys whose value functions are running.
 }
 
 // memoryDataItem holds the internal cache item data.
@@ -25,9 +27,39 @@ type memoryDataItem struct {
 	e int64 // Expire timestamp in milliseconds.
 }
 
+// memoryKeyLocker serializes the value functions of SetWithLock for one key.
+type memoryKeyLocker struct {
+	mu   sync.Mutex
+	refs int // refs is the number of callers holding or waiting for mu.
+}
+
 func newMemoryData() *memoryData {
 	return &memoryData{
-		data: make(map[any]memoryDataItem),
+		data:     make(map[any]memoryDataItem),
+		keyLocks: make(map[any]*memoryKeyLocker),
+	}
+}
+
+// lockKey locks `key` for running its value function and returns the function that unlocks it.
+func (d *memoryData) lockKey(key any) (unlock func()) {
+	d.keyMu.Lock()
+	locker, ok := d.keyLocks[key]
+	if !ok {
+		locker = &memoryKeyLocker{}
+		d.keyLocks[key] = locker
+	}
+	locker.refs++
+	d.keyMu.Unlock()
+
+	locker.mu.Lock()
+	return func() {
+		locker.mu.Unlock()
+		d.keyMu.Lock()
+		locker.refs--
+		if locker.refs == 0 {
+			delete(d.keyLocks, key)
+		}
+		d.keyMu.Unlock()
 	}
 }
 
@@ -184,24 +216,40 @@ func (d *memoryData) SetMap(data map[any]any, expireTime int64) error {
 // SetWithLock sets `key` with `value` if `key` does not exist or is expired.
 // The returned `stored` is true if the item was written by this call, and `exists`
 // is true if `key` is in the cache after the call.
+//
+// If `value` is a function, it is called to get the value. The call holds a lock of
+// `key` instead of the lock of the whole cache, so concurrent calls for the same key
+// call it only once, and the function can still use other keys of the cache.
 func (d *memoryData) SetWithLock(ctx context.Context, key any, value any, expireTimestamp int64) (result any, stored, exists bool, err error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	if v, ok := d.data[key]; ok && !v.IsExpired() {
-		return v.v, false, true, nil
-	}
 	f, ok := value.(Func)
 	if !ok {
 		// Compatible with raw function value.
 		f, ok = value.(func(ctx context.Context) (value any, err error))
 	}
-	if ok {
-		if value, err = f(ctx); err != nil {
-			return nil, false, false, err
-		}
-		if value == nil {
-			return nil, false, false, nil
-		}
+	if !ok {
+		return d.setIfNotExist(key, value, expireTimestamp)
+	}
+	unlock := d.lockKey(key)
+	defer unlock()
+	if item, ok := d.Get(key); ok && !item.IsExpired() {
+		return item.v, false, true, nil
+	}
+	if value, err = f(ctx); err != nil {
+		return nil, false, false, err
+	}
+	if value == nil {
+		return nil, false, false, nil
+	}
+	return d.setIfNotExist(key, value, expireTimestamp)
+}
+
+// setIfNotExist sets `key` with `value` if `key` does not exist or is expired.
+// It returns the value of `key` in the cache after the call.
+func (d *memoryData) setIfNotExist(key any, value any, expireTimestamp int64) (result any, stored, exists bool, err error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if v, ok := d.data[key]; ok && !v.IsExpired() {
+		return v.v, false, true, nil
 	}
 	d.data[key] = memoryDataItem{v: value, e: expireTimestamp}
 	return value, true, true, nil
