@@ -919,3 +919,79 @@ func Test_Gen_Dao_Issue4629_TablesPattern_PgSql(t *testing.T) {
 		t.Assert(gfile.Exists(gfile.Join(path, "dao", "user_log.go")), false)
 	})
 }
+
+// https://github.com/gogf/gf/issues/5050
+// gen dao drops the typeMapping import in DO files: a mapped pointer type
+// survives the any-replacement in generateDo, so the generated DO file
+// references a package it never imports and no longer compiles.
+func Test_Gen_Dao_Issue5050(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err         error
+			table       = "table_user"
+			path        = gfile.Temp(guid.S())
+			linkSqlite3 = fmt.Sprintf("sqlite::@file(%s/db.sqlite3)", path)
+			sqlContent  = fmt.Sprintf(
+				gtest.DataContent(`gendao`, `sqlite3`, `user_issue5050.sqlite3.sql`),
+				table,
+			)
+		)
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+		defer gfile.Remove(path)
+
+		dbSqlite3, err := gdb.New(gdb.ConfigNode{
+			Link: linkSqlite3,
+		})
+		t.AssertNil(err)
+
+		array := gstr.SplitAndTrim(sqlContent, ";")
+		for _, v := range array {
+			if v == "" {
+				continue
+			}
+			if _, err = dbSqlite3.Exec(ctx, v); err != nil {
+				t.AssertNil(err)
+			}
+		}
+
+		var (
+			group = "test"
+			in    = gendao.CGenDaoInput{
+				Path:   path,
+				Link:   linkSqlite3,
+				Group:  group,
+				Tables: table,
+				TypeMapping: map[gendao.DBFieldTypeName]gendao.CustomAttributeType{
+					"decimal": {
+						Type:   "*decimal.Decimal",
+						Import: "github.com/shopspring/decimal",
+					},
+				},
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		// for go mod import path auto retrieve.
+		err = gfile.Copy(
+			gtest.DataPath("gendao", "go.mod.txt"),
+			gfile.Join(path, "go.mod"),
+		)
+		t.AssertNil(err)
+
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+
+		// The DO file must carry the typeMapping import: the mapped type is a
+		// pointer, so it is kept as-is by generateDo and the generated code
+		// needs the import to compile.
+		doContent := gfile.GetContents(gfile.Join(path, "model/do/table_user.go"))
+		t.Assert(gstr.Contains(doContent, `"github.com/shopspring/decimal"`), true)
+		t.Assert(gstr.Contains(doContent, `*decimal.Decimal`), true)
+		// Control: the entity file already carries the import.
+		entityContent := gfile.GetContents(gfile.Join(path, "model/entity/table_user.go"))
+		t.Assert(gstr.Contains(entityContent, `"github.com/shopspring/decimal"`), true)
+		t.Assert(gstr.Contains(entityContent, `*decimal.Decimal`), true)
+	})
+}

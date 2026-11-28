@@ -35,9 +35,9 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			mlog.Fatalf("fetching tables fields failed for table '%s':\n%v", tableName, err)
 		}
 		var (
-			newTableName        = in.NewTableNames[i]
-			doFilePath          = gfile.Join(dirPathDo, formatFileName(newTableName, in.FileNameCase)+".go")
-			structDefinition, _ = generateStructDefinition(ctx, generateStructDefinitionInput{
+			newTableName                    = in.NewTableNames[i]
+			doFilePath                      = gfile.Join(dirPathDo, formatFileName(newTableName, in.FileNameCase)+".go")
+			structDefinition, appendImports = generateStructDefinition(ctx, generateStructDefinitionInput{
 				CGenDaoInternalInput: in,
 				TableName:            tableName,
 				StructName:           formatFieldName(newTableName, FieldNameCaseCamel),
@@ -63,6 +63,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			tableName,
 			formatFieldName(newTableName, FieldNameCaseCamel),
 			structDefinition,
+			appendImports,
 		)
 		in.genItems.AppendGeneratedFilePath(doFilePath)
 		err = gfile.PutContents(doFilePath, strings.TrimSpace(modelContent))
@@ -76,7 +77,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 }
 
 func generateDoContent(
-	ctx context.Context, in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string,
+	ctx context.Context, in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string, appendImports []string,
 ) string {
 	var (
 		tplContent = getTemplateFromPathOrDefault(
@@ -86,7 +87,7 @@ func generateDoContent(
 	tplView.ClearAssigns()
 	tplView.Assigns(gview.Params{
 		tplVarTableName:          tableName,
-		tplVarPackageImports:     getImportPartContent(ctx, structDefine, true, nil),
+		tplVarPackageImports:     getImportPartContent(ctx, structDefine, true, appendImports),
 		tplVarTableNameCamelCase: tableNameCamelCase,
 		tplVarStructDefine:       structDefine,
 		tplVarPackageName:        filepath.Base(in.DoPath),
