@@ -88,4 +88,24 @@ func Test_SpecialCharsMapOrStruct_Struct(t *testing.T) {
 		err := ghtml.SpecialCharsMapOrStruct(a)
 		t.AssertNE(err, nil)
 	})
+
+	// unexported field and field of named string type
+	gtest.C(t, func(t *gtest.T) {
+		type Html string
+		type B struct {
+			Title   string
+			Content Html
+			remark  string
+		}
+		b := &B{
+			Title:   "<h1>T</h1>",
+			Content: "<div>C</div>",
+			remark:  "<p>R</p>",
+		}
+		err := ghtml.SpecialCharsMapOrStruct(b)
+		t.AssertNil(err)
+		t.Assert(b.Title, `&lt;h1&gt;T&lt;/h1&gt;`)
+		t.Assert(b.Content, `&lt;div&gt;C&lt;/div&gt;`)
+		t.Assert(b.remark, `<p>R</p>`)
+	})
 }

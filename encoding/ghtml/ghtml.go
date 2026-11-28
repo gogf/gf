@@ -112,11 +112,10 @@ func SpecialCharsMapOrStruct(mapOrStruct any) error {
 			fieldValue = reflectValue.Field(i)
 			switch fieldValue.Kind() {
 			case reflect.String:
-				fieldValue.Set(
-					reflect.ValueOf(
-						SpecialChars(fieldValue.String()),
-					),
-				)
+				// Unexported fields cannot be set, and SetString also fits named string types.
+				if fieldValue.CanSet() {
+					fieldValue.SetString(SpecialChars(fieldValue.String()))
+				}
 			default:
 			}
 		}
