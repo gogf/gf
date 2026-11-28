@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -36,6 +37,7 @@ type StorageFile struct {
 	cryptoKey     []byte        // Used when enable crypto feature.
 	cryptoEnabled bool          // Used when enable crypto feature.
 	updatingIdSet *gset.StrSet  // To be batched updated session id set.
+	mu            sync.RWMutex  // Guards file reads and writes on platforms without atomic rename.
 }
 
 const (
@@ -203,7 +205,7 @@ func (s *StorageFile) GetSession(ctx context.Context, sessionId string, ttl time
 	if err != nil {
 		return nil, err
 	}
-	content := gfile.GetBytes(path)
+	content := s.readSessionBytes(path)
 	// It updates the TTL only if the session file already exists.
 	if len(content) > 8 {
 		timestampMilli := gbinary.DecodeToInt64(content[:8])
