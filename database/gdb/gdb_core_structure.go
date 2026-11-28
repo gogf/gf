@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Table metadata and driver value conversion.
+
 package gdb
 
 import (
@@ -26,42 +28,39 @@ import (
 
 // GetFieldTypeStr retrieves and returns the field type string for certain field by name.
 func (c *Core) GetFieldTypeStr(ctx context.Context, fieldName, table, schema string) string {
-	field := c.GetFieldType(ctx, fieldName, table, schema)
-	if field != nil {
-		// Kinds of data type examples:
-		// year(4)
-		// datetime
-		// varchar(64)
-		// bigint(20)
-		// int(10) unsigned
-		typeName := gstr.StrTillEx(field.Type, "(") // int(10) unsigned -> int
-		if typeName != "" {
-			typeName = gstr.Trim(typeName)
-		} else {
-			typeName = field.Type
-		}
-		return typeName
+	return c.GetFieldType(ctx, fieldName, table, schema).typeName()
+}
+
+// typeName returns the column type without its size, such as "int" for "int(10) unsigned".
+func (f *TableField) typeName() string {
+	if f == nil {
+		return ""
 	}
-	return ""
+	if name := gstr.StrTillEx(f.Type, "("); name != "" {
+		return gstr.Trim(name)
+	}
+	return f.Type
 }
 
 // GetFieldType retrieves and returns the field type object for certain field by name.
 func (c *Core) GetFieldType(ctx context.Context, fieldName, table, schema string) *TableField {
-	fieldsMap, err := c.db.TableFields(ctx, c.tableNameForFields(table), schema)
+	return c.tableFields(ctx, c.tableNameForFields(table), schema)[fieldName]
+}
+
+// tableFields returns the driver's field metadata, or an empty map when it is unavailable.
+func (c *Core) tableFields(ctx context.Context, table, schema string) map[string]*TableField {
+	fieldsMap, err := c.db.TableFields(ctx, table, schema)
 	if err != nil {
 		intlog.Errorf(
 			ctx,
 			`TableFields failed for table "%s", schema "%s": %+v`,
 			table, schema, err,
 		)
-		return nil
 	}
-	for tableFieldName, tableField := range fieldsMap {
-		if tableFieldName == fieldName {
-			return tableField
-		}
+	if fieldsMap == nil || err != nil {
+		return map[string]*TableField{}
 	}
-	return nil
+	return fieldsMap
 }
 
 // ConvertDataForRecord is a very important function, which does converting for any data that
@@ -71,14 +70,14 @@ func (c *Core) GetFieldType(ctx context.Context, fieldName, table, schema string
 // It supports embedded struct definition for struct.
 func (c *Core) ConvertDataForRecord(ctx context.Context, value any, table string) (map[string]any, error) {
 	var (
-		err  error
-		data = MapOrStructToMapDeep(value, true)
+		err    error
+		data   = MapOrStructToMapDeep(value, true)
+		fields = c.tableFields(ctx, c.tableNameForFields(table), c.GetSchema())
 	)
 	for fieldName, fieldValue := range data {
-		var fieldType = c.GetFieldTypeStr(ctx, fieldName, table, c.GetSchema())
 		data[fieldName], err = c.db.ConvertValueForField(
 			ctx,
-			fieldType,
+			fields[fieldName].typeName(),
 			fieldValue,
 		)
 		if err != nil {
