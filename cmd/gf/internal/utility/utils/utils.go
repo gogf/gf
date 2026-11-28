@@ -4,17 +4,19 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file provides source formatting and module path utilities for the gf CLI.
+
 package utils
 
 import (
 	"context"
 	"fmt"
 
+	"golang.org/x/mod/modfile"
 	"golang.org/x/tools/imports"
 
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
@@ -107,8 +109,12 @@ func GetImportPath(dirPath string) string {
 	for {
 		goModPath = gfile.Join(newDir, goModName)
 		if gfile.Exists(goModPath) {
-			match, _ := gregex.MatchString(`^module\s+(.+)\s*`, gfile.GetContents(goModPath))
-			importPath = gstr.Trim(match[1]) + "/" + suffix
+			// Parse the directive instead of assuming it starts on the first line.
+			var modulePath = modfile.ModulePath([]byte(gfile.GetContents(goModPath)))
+			if modulePath == "" {
+				return ""
+			}
+			importPath = modulePath + "/" + suffix
 			importPath = gstr.Replace(importPath, `\`, `/`)
 			importPath = gstr.TrimRight(importPath, `/`)
 			return importPath
